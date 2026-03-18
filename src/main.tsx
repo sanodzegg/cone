@@ -3,7 +3,7 @@ import Router from './router'
 
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import { BrowserRouter } from 'react-router-dom'
+import { HashRouter as BrowserRouter } from 'react-router-dom'
 import { ThemeProvider } from '@/components/theme/theme-provider'
 import Navigation from './components/navigation/navigation'
 

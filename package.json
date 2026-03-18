@@ -9,8 +9,9 @@
     "start": "electron .",
     "dev:all": "concurrently -n vite,electron -c cyan,yellow \"vite\" \"electron .\"",
     "package": "vite build && electron-builder",
-    "package:mac": "vite build && electron-builder --mac",
+    "package:mac": "vite build && electron-rebuild -f -w sharp && electron-builder --mac",
     "package:win": "vite build && electron-builder --win",
+    "postinstall": "electron-builder install-app-deps",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -22,11 +23,16 @@
     "mac": {
       "icon": "build-assets/icon.icns",
       "category": "public.app-category.graphics-design",
-      "target": ["dmg", "zip"]
+      "target": [
+        "dmg",
+        "zip"
+      ]
     },
     "win": {
       "icon": "build-assets/icon.ico",
-      "target": ["nsis"]
+      "target": [
+        "nsis"
+      ]
     },
     "files": [
       "dist/**",
@@ -40,7 +46,15 @@
       "output": "release"
     },
     "extraResources": [],
-    "asar": true
+    "asar": true,
+    "asarUnpack": [
+      "**/node_modules/sharp/**/*",
+      "**/node_modules/@img/**/*",
+      "**/node_modules/detect-libc/**/*"
+    ],
+    "npmRebuild": true,
+    "buildDependenciesFromSource": false,
+    "nativeRebuilder": "legacy"
   },
   "packageManager": "pnpm@10.32.1",
   "devDependencies": {
@@ -51,6 +65,7 @@
     "concurrently": "^9.2.1",
     "electron": "^41.0.0",
     "electron-builder": "^26.8.1",
+    "electron-rebuild": "^3.2.9",
     "tailwindcss": "^4.2.1",
     "typescript": "^5.9.3",
     "vite": "^7.3.1"
