@@ -25,6 +25,10 @@ const extensions: { title: string; href: string; }[] = [
         title: 'Favicon',
         href: '/extensions/favicon'
     },
+    {
+        title: 'Image Editor',
+        href: '/extensions/image-editor'
+    },
 ]
 
 function ExtensionListItem({

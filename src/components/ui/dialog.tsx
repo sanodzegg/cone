@@ -46,7 +46,7 @@ function DialogContent({ className, children, ...props }: DialogPrimitive.Popup.
             >
                 {children}
                 <DialogPrimitive.Close
-                    className="absolute top-4 right-4 rounded-md p-1 text-muted-foreground opacity-70 hover:opacity-100 focus:outline-none"
+                    className="cursor-pointer absolute top-4 right-4 rounded-md p-1 text-muted-foreground opacity-70 hover:opacity-100 focus:outline-none"
                     aria-label="Close"
                 >
                     <X className="size-4" />

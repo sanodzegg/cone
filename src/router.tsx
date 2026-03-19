@@ -2,6 +2,7 @@ import { Route, Routes } from "react-router-dom";
 import Homepage from "./pages/homepage";
 import Settings from "./pages/settings";
 import FaviconConversion from "./pages/favicons";
+import ImageEditor from "./pages/image-editor";
 
 export default function Router() {
   return (
@@ -9,6 +10,7 @@ export default function Router() {
         <Route index element={<Homepage />} />
         <Route path="/settings" element={<Settings />} />
         <Route path="/extensions/favicon" element={<FaviconConversion />} />
+        <Route path="/extensions/image-editor" element={<ImageEditor />} />
     </Routes>
   )
 }
