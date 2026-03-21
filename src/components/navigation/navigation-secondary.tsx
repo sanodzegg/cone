@@ -10,7 +10,7 @@ import {
     SheetTrigger,
 } from "../ui/sheet";
 import { cn } from "@/lib/utils";
-import { Globe, ImageIcon, LayoutGrid } from "lucide-react";
+import { FolderSync, Globe, ImageIcon, LayoutGrid } from "lucide-react";
 
 const extensions: { title: string; description: string; href: string; icon: React.ReactNode }[] = [
     {
@@ -24,6 +24,12 @@ const extensions: { title: string; description: string; href: string; icon: Reac
         description: 'Crop, transform, and adjust images',
         href: '/extensions/image-editor',
         icon: <ImageIcon className="size-5" />,
+    },
+    {
+        title: 'Bulk Converter',
+        description: 'Convert all images in a folder recursively',
+        href: '/extensions/bulk-converter',
+        icon: <FolderSync className="size-5" />,
     },
 ]
 
@@ -53,7 +59,7 @@ export function NavigationSecondary() {
                 </SheetTrigger>
                 <SheetContent side="right" className="w-94">
                     <SheetHeader>
-                        <SheetTitle>Extensions</SheetTitle>
+                        <SheetTitle className={'font-body'}>Extensions</SheetTitle>
                     </SheetHeader>
                     <div className="flex flex-col gap-2 p-4 pt-0">
                         {extensions.map((ext) => (

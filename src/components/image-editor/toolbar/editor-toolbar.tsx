@@ -5,7 +5,6 @@ import { TabEffects } from './tab-effects'
 import { TabTransform } from './tab-transform'
 import { TabOverlay, type OverlayMode } from './tab-overlay'
 import { TabCanvas } from './tab-canvas'
-import { TabBgRemove } from './tab-bgremove'
 import type { Adjustments, Transform, EditorTab } from './types'
 import { DEFAULT_ADJUSTMENTS } from './types'
 import type { ResizeState } from '../utils/resize-presets'
@@ -138,7 +137,6 @@ export default function EditorToolbar({
             onChange={onResize}
           />
         )}
-        {activeTab === 'bgremove' && <TabBgRemove />}
       </div>
     </div>
   )

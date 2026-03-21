@@ -1,11 +1,14 @@
 const { app, BrowserWindow } = require('electron')
 const path = require('path')
 const { registerConvertHandlers } = require('./electron/convert')
+const { registerBulkConvertHandlers } = require('./electron/bulk-convert')
 
 const isDev = !app.isPackaged
 
+let mainWindow = null
+
 function createWindow() {
-  const win = new BrowserWindow({
+  mainWindow = new BrowserWindow({
     width: 1280,
     height: 800,
     icon: path.join(__dirname, 'build-assets/icon.icns'),
@@ -19,15 +22,16 @@ function createWindow() {
   })
 
   if (isDev) {
-    win.loadURL('http://localhost:5173')
+    mainWindow.loadURL('http://localhost:5173')
   } else {
-    win.loadFile(path.join(__dirname, 'dist/index.html'))
+    mainWindow.loadFile(path.join(__dirname, 'dist/index.html'))
   }
 }
 
 app.whenReady().then(() => {
-  registerConvertHandlers()
   createWindow()
+  registerConvertHandlers()
+  registerBulkConvertHandlers(mainWindow)
 })
 
 app.on('window-all-closed', () => {
