@@ -2,6 +2,7 @@ const { app, BrowserWindow } = require('electron')
 const path = require('path')
 const { registerConvertHandlers } = require('./electron/convert')
 const { registerBulkConvertHandlers } = require('./electron/bulk-convert')
+const { registerScreenshotHandlers } = require('./electron/screenshot')
 
 const isDev = !app.isPackaged
 
@@ -32,6 +33,7 @@ app.whenReady().then(() => {
   createWindow()
   registerConvertHandlers()
   registerBulkConvertHandlers(mainWindow)
+  registerScreenshotHandlers(mainWindow)
 })
 
 app.on('window-all-closed', () => {

@@ -10,7 +10,7 @@ import {
     SheetTrigger,
 } from "../ui/sheet";
 import { cn } from "@/lib/utils";
-import { FolderSync, Globe, ImageIcon, LayoutGrid } from "lucide-react";
+import { Camera, FolderSync, Globe, ImageIcon, LayoutGrid } from "lucide-react";
 
 const extensions: { title: string; description: string; href: string; icon: React.ReactNode }[] = [
     {
@@ -30,6 +30,12 @@ const extensions: { title: string; description: string; href: string; icon: Reac
         description: 'Convert all images in a folder recursively',
         href: '/extensions/bulk-converter',
         icon: <FolderSync className="size-5" />,
+    },
+    {
+        title: 'Website Screenshot',
+        description: 'Capture full-page screenshots of any public URL',
+        href: '/extensions/website-screenshot',
+        icon: <Camera className="size-5" />,
     },
 ]
 

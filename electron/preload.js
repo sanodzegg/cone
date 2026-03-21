@@ -22,4 +22,14 @@ contextBridge.exposeInMainWorld('electron', {
     ipcRenderer.on('bulk-watch-converted', handler)
     return () => ipcRenderer.removeListener('bulk-watch-converted', handler)
   },
+
+  // Website screenshot
+  screenshotEnsureBrowser: () => ipcRenderer.invoke('screenshot-ensure-browser'),
+  screenshotCapture: (opts) => ipcRenderer.invoke('screenshot-capture', opts),
+  screenshotSave: (opts) => ipcRenderer.invoke('screenshot-save', opts),
+  onScreenshotBrowserStatus: (cb) => {
+    const handler = (_e, data) => cb(data)
+    ipcRenderer.on('screenshot-browser-status', handler)
+    return () => ipcRenderer.removeListener('screenshot-browser-status', handler)
+  },
 })

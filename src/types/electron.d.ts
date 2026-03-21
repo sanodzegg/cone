@@ -30,5 +30,11 @@ declare interface Window {
     bulkWatchStop: (folderPath: string) => Promise<boolean>
     onBulkProgress: (cb: (data: { done: number; total: number; latest: BulkFileResult }) => void) => () => void
     onBulkWatchConverted: (cb: (data: BulkFileResult) => void) => () => void
+
+    // Website screenshot
+    screenshotEnsureBrowser: () => Promise<boolean>
+    screenshotCapture: (opts: { url: string; format: 'png' | 'jpg' | 'webp'; viewportWidth: number }) => Promise<{ preview: string; buffer: number[]; format: string }>
+    screenshotSave: (opts: { buffer: number[]; format: string; url: string }) => Promise<{ canceled: boolean; filePath?: string }>
+    onScreenshotBrowserStatus: (cb: (data: { status: 'downloading' | 'ready' | 'error'; error?: string }) => void) => () => void
   }
 }
