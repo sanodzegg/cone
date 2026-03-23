@@ -1,6 +1,7 @@
 import { Button } from "../ui/button"
 import { Download } from "lucide-react"
 import JSZip from "jszip"
+import icnsReadme from "./icns-readme.txt?raw"
 
 const FAVICON_SIZES = [16, 32, 48, 64, 128, 256, 512, 1024]
 
@@ -35,12 +36,38 @@ export default function FaviconResults({ result, sourceFile, onReset }: Props) {
         downloadBlob(new Blob([buf], { type: 'image/png' }), `icon-${size}x${size}.png`)
     }
 
+    // iconutil requires specific filenames: 1x and @2x pairs
+    // e.g. icon_16x16.png (16px) + icon_16x16@2x.png (32px file renamed)
+    const ICNS_FILES: { name: string; size: number }[] = [
+        { name: 'icon_16x16.png', size: 16 },
+        { name: 'icon_16x16@2x.png', size: 32 },
+        { name: 'icon_32x32.png', size: 32 },
+        { name: 'icon_32x32@2x.png', size: 64 },
+        { name: 'icon_128x128.png', size: 128 },
+        { name: 'icon_128x128@2x.png', size: 256 },
+        { name: 'icon_256x256.png', size: 256 },
+        { name: 'icon_256x256@2x.png', size: 512 },
+        { name: 'icon_512x512.png', size: 512 },
+        { name: 'icon_512x512@2x.png', size: 1024 },
+    ]
+
     const downloadAll = async () => {
         const zip = new JSZip()
         zip.file('favicon.ico', result.ico)
+
         for (const { size, buf } of result.pngs) {
             zip.file(`icon-${size}x${size}.png`, buf)
         }
+
+        // icns/ subfolder — rename files exactly as iconutil expects
+        const bySize = Object.fromEntries(result.pngs.map(({ size, buf }) => [size, buf]))
+        const icns = zip.folder('icns')!
+        for (const { name, size } of ICNS_FILES) {
+            if (bySize[size]) icns.file(name, bySize[size])
+        }
+
+        icns.file('README.txt', icnsReadme)
+
         const blob = await zip.generateAsync({ type: 'blob' })
         downloadBlob(blob, `${baseName}-icons.zip`)
     }
