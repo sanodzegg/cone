@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect, useCallback } from 'react'
 import { Button } from '../ui/button'
-import { RotateCcw } from 'lucide-react'
+import { RotateCcw, Undo2, Redo2 } from 'lucide-react'
 import { SideToolbar } from './toolbar/side-toolbar'
 import { BottomPanel } from './toolbar/bottom-panel'
 import type { OverlayMode } from './toolbar/tab-overlay'
@@ -12,6 +12,7 @@ import { canvasToImage, imageToCanvas, type ScaleInfo } from './utils/image-spac
 import { DEFAULT_RESIZE, type ResizeState } from './utils/resize-presets'
 import { useTextOverlays } from './layers/use-text-overlays'
 import { useDrawCommands, renderCommand, type DrawTool, type DrawCommand, type Point } from './layers/use-draw-commands'
+import { useEditorHistory, type EditorSnapshot } from './layers/use-editor-history'
 
 interface Rect { x: number; y: number; w: number; h: number }
 type CropHandle = 'tl' | 'tr' | 'bl' | 'br' | 'move' | null
@@ -35,7 +36,7 @@ export default function CropEditor({ file, onReset }: Props) {
   // Crop state
   const [crop, setCrop] = useState<Rect>({ x: 0, y: 0, w: 0, h: 0 })
   const cropRef = useRef<Rect>({ x: 0, y: 0, w: 0, h: 0 })
-  const dragRef = useRef<{ handle: CropHandle; startX: number; startY: number; origCrop: Rect } | null>(null)
+  const dragRef = useRef<{ handle: CropHandle; startX: number; startY: number; origCrop: Rect; snapshotAtStart: EditorSnapshot } | null>(null)
 
   // Editor state
   const [imgLoaded, setImgLoaded] = useState(false)
@@ -48,6 +49,16 @@ export default function CropEditor({ file, onReset }: Props) {
   const [drawWidth, setDrawWidth] = useState(3)
   const [bgRemoveStatus, setBgRemoveStatus] = useState<'idle' | 'loading' | 'done' | 'error'>('idle')
   const [bgRemoveProgress, setBgRemoveProgress] = useState(0)
+  const bgRemoveCancelledRef = useRef(false)
+
+  // Unified undo/redo history
+  const history = useEditorHistory({
+    crop: { x: 0, y: 0, w: 0, h: 0 },
+    adjustments: DEFAULT_ADJUSTMENTS,
+    transform: DEFAULT_TRANSFORM,
+    drawCommands: [],
+    textOverlays: [],
+  })
 
   // Refs for read-in-callback access
   const adjustmentsRef = useRef(adjustments)
@@ -76,7 +87,15 @@ export default function CropEditor({ file, onReset }: Props) {
   const drawLayerRef = useRef(drawLayer)
   useEffect(() => { drawLayerRef.current = drawLayer }, [drawLayer])
   const isDrawingRef = useRef(false)
-  const textDragRef = useRef<{ id: string; startX: number; startY: number; origX: number; origY: number } | null>(null)
+  const textDragRef = useRef<{ id: string; startX: number; startY: number; origX: number; origY: number; snapshotAtStart: EditorSnapshot } | null>(null)
+
+  const getSnapshot = useCallback((): EditorSnapshot => ({
+    crop: cropRef.current,
+    adjustments: adjustmentsRef.current,
+    transform: transformRef.current,
+    drawCommands: drawLayerRef.current.commands,
+    textOverlays: textLayerRef.current.overlays,
+  }), [])
 
   // ─── Draw pipeline ───────────────────────────────────────────────────────
 
@@ -284,7 +303,7 @@ export default function CropEditor({ file, onReset }: Props) {
     if (currentMode === 'crop') {
       const handle = getHandle(x, y)
       if (!handle) return
-      dragRef.current = { handle, startX: x, startY: y, origCrop: { ...cropRef.current } }
+      dragRef.current = { handle, startX: x, startY: y, origCrop: { ...cropRef.current }, snapshotAtStart: getSnapshot() }
       return
     }
     if (currentMode === 'text') {
@@ -299,8 +318,9 @@ export default function CropEditor({ file, onReset }: Props) {
       })
       if (hit) {
         tl.setSelectedId(hit.id)
-        textDragRef.current = { id: hit.id, startX: x, startY: y, origX: hit.x, origY: hit.y }
+        textDragRef.current = { id: hit.id, startX: x, startY: y, origX: hit.x, origY: hit.y, snapshotAtStart: getSnapshot() }
       } else {
+        history.push(getSnapshot())
         tl.add(imgPos.x, imgPos.y)
       }
       return
@@ -348,10 +368,18 @@ export default function CropEditor({ file, onReset }: Props) {
       }
     }
     const onUp = () => {
+      if (dragRef.current) {
+        history.push(dragRef.current.snapshotAtStart)
+      }
       dragRef.current = null
+      if (textDragRef.current) {
+        history.push(textDragRef.current.snapshotAtStart)
+      }
       textDragRef.current = null
       if (modeRef.current === 'draw' && isDrawingRef.current) {
         isDrawingRef.current = false
+        // Push snapshot before the stroke is committed
+        history.push(getSnapshot())
         drawLayerRef.current.endStroke()
       }
     }
@@ -383,26 +411,97 @@ export default function CropEditor({ file, onReset }: Props) {
     return map[handle ?? ''] ?? 'default'
   }
 
+  // ─── Undo / Redo ─────────────────────────────────────────────────────────
+
+  const applySnapshot = useCallback((snap: EditorSnapshot) => {
+    setCrop(snap.crop)
+    cropRef.current = snap.crop
+    setAdjustments(snap.adjustments)
+    setTransform(snap.transform)
+    drawLayer.setCommands(snap.drawCommands)
+    textLayer.setOverlays(snap.textOverlays)
+  }, [drawLayer, textLayer])
+
+  const handleUndo = useCallback(() => {
+    const snap = history.undo()
+    if (snap) {
+      history.pushRedo(getSnapshot())
+      applySnapshot(snap)
+    }
+  }, [history, getSnapshot, applySnapshot])
+
+  const handleRedo = useCallback(() => {
+    const snap = history.redo(getSnapshot())
+    if (snap) applySnapshot(snap)
+  }, [history, getSnapshot, applySnapshot])
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (!(e.metaKey || e.ctrlKey)) return
+      if (e.key === 'z' && !e.shiftKey) { e.preventDefault(); handleUndo() }
+      if ((e.key === 'z' && e.shiftKey) || e.key === 'y') { e.preventDefault(); handleRedo() }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [handleUndo, handleRedo])
+
+  // Push current snapshot to history without changing state (called at drag start)
+  const handlePushHistory = useCallback(() => {
+    history.push(getSnapshot())
+  }, [history, getSnapshot])
+
+  // Live preview setter — no history push (used during slider drag)
+  const handleSetAdjustmentsLive = useCallback((a: Adjustments) => {
+    setAdjustments(a)
+    adjustmentsRef.current = a
+  }, [])
+
+  // History-aware setters for toolbar callbacks (called on commit / discrete action)
+  const handleSetAdjustments = useCallback((a: Adjustments) => {
+    history.push(getSnapshot())
+    setAdjustments(a)
+    adjustmentsRef.current = a
+  }, [history, getSnapshot])
+
+  const handleSetTransform = useCallback((t: Transform) => {
+    history.push(getSnapshot())
+    setTransform(t)
+  }, [history, getSnapshot])
+
+  const handleDeleteText = useCallback((id: string) => {
+    history.push(getSnapshot())
+    textLayer.remove(id)
+  }, [history, getSnapshot, textLayer])
+
+  const handleUpdateText = useCallback((id: string, patch: Parameters<typeof textLayer.update>[1]) => {
+    history.push(getSnapshot())
+    textLayer.update(id, patch)
+  }, [history, getSnapshot, textLayer])
+
   // ─── BG Remove ───────────────────────────────────────────────────────────
 
   const handleBgRemove = async () => {
     const img = imgRef.current
     if (!img) return
+    bgRemoveCancelledRef.current = false
     setBgRemoveStatus('loading')
     setBgRemoveProgress(0)
     try {
       const { removeBackground } = await import('@imgly/background-removal')
-      // Fetch the current image as a blob
       const res = await fetch(img.src)
       const inputBlob = await res.blob()
       const resultBlob = await removeBackground(inputBlob, {
         progress: (_key: string, current: number, total: number) => {
+          if (bgRemoveCancelledRef.current) return
           setBgRemoveProgress(total > 0 ? Math.round((current / total) * 100) : 0)
         },
       })
+      if (bgRemoveCancelledRef.current) return
       const url = URL.createObjectURL(resultBlob)
       const newImg = new Image()
       newImg.onload = () => {
+        if (bgRemoveCancelledRef.current) { URL.revokeObjectURL(url); return }
         imgRef.current = newImg
         initCanvas(newImg)
         setBgRemoveStatus('done')
@@ -410,8 +509,14 @@ export default function CropEditor({ file, onReset }: Props) {
       }
       newImg.src = url
     } catch {
-      setBgRemoveStatus('error')
+      if (!bgRemoveCancelledRef.current) setBgRemoveStatus('error')
     }
+  }
+
+  const handleBgRemoveCancel = () => {
+    bgRemoveCancelledRef.current = true
+    setBgRemoveStatus('idle')
+    setBgRemoveProgress(0)
   }
 
   // ─── Export ───────────────────────────────────────────────────────────────
@@ -510,10 +615,13 @@ export default function CropEditor({ file, onReset }: Props) {
         {imgLoaded && (
           <BottomPanel
             adjustments={adjustments}
-            onAdjustments={setAdjustments}
+            onAdjustments={handleSetAdjustmentsLive}
+            onAdjustmentsCommit={handleSetAdjustments}
+            onHistoryPush={handlePushHistory}
             bgRemoveStatus={bgRemoveStatus}
             bgRemoveProgress={bgRemoveProgress}
             onBgRemove={handleBgRemove}
+            onBgRemoveCancel={handleBgRemoveCancel}
           />
         )}
 
@@ -522,19 +630,16 @@ export default function CropEditor({ file, onReset }: Props) {
             {exportW} × {exportH} px
             {resize.enabled && <span className="text-primary ml-1.5">(resized)</span>}
           </p>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" className="gap-2" onClick={onReset}>
-              <RotateCcw className="size-4" />
-              New Image
-            </Button>
-            <ExportDialog onExport={handleExport} />
-          </div>
+          <Button variant="outline" className="gap-2" onClick={onReset}>
+            <RotateCcw className="size-4" />
+            New Image
+          </Button>
         </div>
       </div>
 
       {/* Right: spatial tools */}
       {imgLoaded && (
-        <div className="w-64 shrink-0">
+        <div className="w-64 shrink-0 space-y-3">
           <SideToolbar
             adjustments={adjustments}
             transform={transform}
@@ -547,19 +652,28 @@ export default function CropEditor({ file, onReset }: Props) {
             drawTool={drawTool}
             drawColor={drawColor}
             drawWidth={drawWidth}
-            canUndo={drawLayer.canUndo}
-            onAdjustments={setAdjustments}
-            onTransform={setTransform}
+            onAdjustments={handleSetAdjustments}
+            onAdjustmentsLive={handleSetAdjustmentsLive}
+            onHistoryPush={handlePushHistory}
+            onTransform={handleSetTransform}
             onResize={setResize}
             onMode={setMode}
             onSelectText={textLayer.setSelectedId}
-            onUpdateText={textLayer.update}
-            onDeleteText={textLayer.remove}
+            onUpdateText={handleUpdateText}
+            onDeleteText={handleDeleteText}
             onDrawTool={setDrawTool}
             onDrawColor={setDrawColor}
             onDrawWidth={setDrawWidth}
-            onDrawUndo={drawLayer.undo}
           />
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" className="flex-1 gap-1.5" onClick={handleUndo} disabled={!history.canUndo} title="Undo (⌘Z)">
+              <Undo2 className="size-3.5" /> Undo
+            </Button>
+            <Button variant="outline" size="sm" className="flex-1 gap-1.5" onClick={handleRedo} disabled={!history.canRedo} title="Redo (⌘⇧Z)">
+              <Redo2 className="size-3.5" /> Redo
+            </Button>
+            <ExportDialog onExport={handleExport} iconOnly />
+          </div>
         </div>
       )}
     </div>
