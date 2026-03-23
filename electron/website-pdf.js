@@ -61,56 +61,48 @@ function registerWebsitePdfHandlers(mainWindow) {
       // Wait for triggered lazy images and video sources to finish loading
       await page.waitForTimeout(2500)
 
-      // Replace video elements with poster image or first frame via canvas
-      await page.evaluate(async () => {
-        const videos = Array.from(document.querySelectorAll('video'))
-        await Promise.all(videos.map(video => new Promise(resolve => {
-          const poster = video.getAttribute('poster')
-          const w = video.offsetWidth || video.videoWidth || 640
-          const h = video.offsetHeight || video.videoHeight || 360
-          const img = document.createElement('img')
-          img.style.cssText = `width:100%;height:${h}px;object-fit:cover;display:block;`
-          if (poster) {
-            img.onload = resolve
-            img.onerror = resolve
-            img.src = poster
-            video.replaceWith(img)
-          } else if (video.src || video.currentSrc) {
-            const canvas = document.createElement('canvas')
-            canvas.width = video.videoWidth || w
-            canvas.height = video.videoHeight || h
-            const ctx = canvas.getContext('2d')
-            const tryDraw = () => {
-              try { ctx.drawImage(video, 0, 0, w, h) } catch (e) {}
-              img.src = canvas.toDataURL()
-              img.onload = resolve
-              img.onerror = resolve
-              video.replaceWith(img)
-            }
-            if (video.readyState >= 2) {
-              video.currentTime = 0
-              video.addEventListener('seeked', tryDraw, { once: true })
-              setTimeout(tryDraw, 3000)
-            } else {
-              video.addEventListener('loadeddata', () => {
-                video.currentTime = 0
-                video.addEventListener('seeked', tryDraw, { once: true })
-              }, { once: true })
-              setTimeout(tryDraw, 5000)
-            }
-          } else {
-            video.style.setProperty('display', 'none', 'important')
-            resolve()
-          }
-        })))
-      })
-
       if (waitTime && waitTime > 0) {
         mainWindow.webContents.send('website-pdf-waiting', { waitTime })
         await page.waitForTimeout(waitTime)
       } else {
         await page.waitForTimeout(500)
       }
+
+      // Replace videos — after all waits, so extra wait time benefits video loading too
+      await page.evaluate(() => {
+        document.querySelectorAll('video').forEach(video => {
+          const poster = video.getAttribute('poster')
+          const w = video.offsetWidth || 640
+          const h = video.offsetHeight || 360
+          if (poster) {
+            const img = document.createElement('img')
+            img.src = poster
+            img.style.cssText = `width:${w}px;height:${h}px;object-fit:cover;display:block;`
+            video.replaceWith(img)
+          } else if (video.readyState >= 2) {
+            const canvas = document.createElement('canvas')
+            canvas.width = w
+            canvas.height = h
+            const ctx = canvas.getContext('2d')
+            const img = document.createElement('img')
+            img.style.cssText = `width:${w}px;height:${h}px;object-fit:cover;display:block;`
+            try { ctx.drawImage(video, 0, 0, w, h) } catch (e) {}
+            img.src = canvas.toDataURL()
+            video.replaceWith(img)
+          } else {
+            // Not loaded in time — hide wrapper
+            let el = video
+            while (el.parentElement) {
+              const parent = el.parentElement
+              const siblings = Array.from(parent.children).filter(c => c !== el)
+              const hasContent = siblings.some(c => c.textContent.trim().length > 0 || c.querySelector('img, video, canvas'))
+              if (hasContent) break
+              el = parent
+            }
+            el.style.setProperty('display', 'none', 'important')
+          }
+        })
+      })
 
       await page.emulateMedia({ media: 'print' })
 

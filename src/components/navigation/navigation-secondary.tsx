@@ -40,19 +40,6 @@ const extensions: Extension[] = [
     },
     {
         kind: 'group',
-        title: 'PDF',
-        icon: <FileDown className="size-5" />,
-        children: [
-            {
-                title: 'Merge',
-                description: 'Combine multiple PDFs into one',
-                href: '/extensions/pdf-merge',
-                icon: <FilePlus className="size-5" />,
-            },
-        ],
-    },
-    {
-        kind: 'group',
         title: 'Web',
         icon: <Globe className="size-5" />,
         children: [
@@ -72,6 +59,19 @@ const extensions: Extension[] = [
             },
         ],
     },
+    {
+        kind: 'group',
+        title: 'PDF',
+        icon: <FileDown className="size-5" />,
+        children: [
+            {
+                title: 'Merge',
+                description: 'Combine multiple PDFs into one',
+                href: '/extensions/pdf-merge',
+                icon: <FilePlus className="size-5" />,
+            },
+        ],
+    }
 ]
 
 export function NavigationSecondary() {
@@ -80,7 +80,7 @@ export function NavigationSecondary() {
     const [open, setOpen] = useState(false)
     const [expandedGroup, setExpandedGroup] = useState<string | null>(
         pathname.startsWith('/extensions/website') ? 'Web' :
-        pathname.startsWith('/extensions/pdf') ? 'PDF' : null
+            pathname.startsWith('/extensions/pdf') ? 'PDF' : null
     )
     const [isOnline, setIsOnline] = useState(navigator.onLine)
 
