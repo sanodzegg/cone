@@ -29,6 +29,15 @@ contextBridge.exposeInMainWorld('electron', {
   pdfMergeSave: () => ipcRenderer.invoke('pdf-merge-save'),
   pdfPickFiles: () => ipcRenderer.invoke('pdf-pick-files'),
 
+  // Website PDF
+  websitePdfGenerate: (opts) => ipcRenderer.invoke('website-pdf-generate', opts),
+  websitePdfSave: (opts) => ipcRenderer.invoke('website-pdf-save', opts),
+  onWebsitePdfWaiting: (cb) => {
+    const handler = (_e, data) => cb(data)
+    ipcRenderer.on('website-pdf-waiting', handler)
+    return () => ipcRenderer.removeListener('website-pdf-waiting', handler)
+  },
+
   // Website screenshot
   screenshotEnsureBrowser: () => ipcRenderer.invoke('screenshot-ensure-browser'),
   screenshotCapture: (opts) => ipcRenderer.invoke('screenshot-capture', opts),

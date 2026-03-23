@@ -68,7 +68,7 @@ const extensions: Extension[] = [
                 description: 'Save any webpage as a PDF file',
                 href: '/extensions/website-pdf',
                 icon: <FileDown className="size-5" />,
-                disabled: true,
+                requiresInternet: true,
             },
         ],
     },

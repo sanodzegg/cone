@@ -37,6 +37,23 @@ declare interface Window {
     pdfMergeSave: () => Promise<{ canceled: boolean; filePath?: string }>
     pdfPickFiles: () => Promise<{ canceled: boolean; files: { path: string; name: string; size: number }[] }>
 
+    // Website PDF
+    websitePdfGenerate: (opts: {
+      url: string
+      viewportWidth: number
+      format: string
+      orientation: 'portrait' | 'landscape'
+      marginTop: number
+      marginBottom: number
+      marginLeft: number
+      marginRight: number
+      printBackground: boolean
+      waitUntil: 'load' | 'domcontentloaded' | 'networkidle'
+      waitTime: number
+    }) => Promise<{ buffer: number[] }>
+    websitePdfSave: (opts: { buffer: number[]; url: string }) => Promise<{ canceled: boolean; filePath?: string }>
+    onWebsitePdfWaiting: (cb: (data: { waitTime: number }) => void) => () => void
+
     // Website screenshot
     screenshotEnsureBrowser: () => Promise<boolean>
     screenshotCapture: (opts: { url: string; format: 'png' | 'jpg' | 'webp'; viewportWidth: number }) => Promise<{ preview: string; buffer: number[]; format: string }>

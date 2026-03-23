@@ -176,4 +176,10 @@ function registerScreenshotHandlers(mainWindow) {
   })
 }
 
-module.exports = { registerScreenshotHandlers }
+async function getBrowserInstance(mainWindow) {
+  if (browserReady) return browserInstance
+  const ok = await ensureBrowser(mainWindow)
+  return ok ? browserInstance : null
+}
+
+module.exports = { registerScreenshotHandlers, getBrowserInstance }
