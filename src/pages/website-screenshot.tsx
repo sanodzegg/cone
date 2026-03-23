@@ -14,11 +14,11 @@ const VIEWPORT_PRESETS = [
   { label: 'Wide', value: 1920 },
 ]
 const USER_AGENT_PRESETS = [
-  { label: 'Default', value: '' },
-  { label: 'Chrome', value: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36' },
-  { label: 'Safari', value: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 14_4) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15' },
-  { label: 'Mobile', value: 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Mobile/15E148 Safari/604.1' },
-  { label: 'Bot', value: 'Googlebot/2.1 (+http://www.google.com/bot.html)' },
+  { label: 'Default', value: '', viewport: 1440 },
+  { label: 'Chrome', value: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36', viewport: 1440 },
+  { label: 'Safari', value: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 14_4) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15', viewport: 1440 },
+  { label: 'Mobile', value: 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Mobile/15E148 Safari/604.1', viewport: 390 },
+  { label: 'Bot', value: 'Googlebot/2.1 (+http://www.google.com/bot.html)', viewport: 1440 },
 ]
 
 export default function WebsiteScreenshot() {
@@ -175,7 +175,7 @@ export default function WebsiteScreenshot() {
               {USER_AGENT_PRESETS.map(p => (
                 <button
                   key={p.label}
-                  onClick={() => setUserAgent(p.value)}
+                  onClick={() => { setUserAgent(p.value); setViewportWidth(p.viewport) }}
                   disabled={isCapturing}
                   className={cn(
                     'cursor-pointer rounded-lg border px-2.5 py-1 text-xs transition-colors',
