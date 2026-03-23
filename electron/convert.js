@@ -57,7 +57,7 @@ async function textToDocx(text) {
   return Packer.toBuffer(doc)
 }
 
-const FAVICON_SIZES = [16, 32, 48, 128, 256, 512]
+const FAVICON_SIZES = [16, 32, 48, 64, 128, 256, 512, 1024]
 
 // Encode multiple PNG buffers into a single .ico file
 function encodeIco(pngBuffers) {

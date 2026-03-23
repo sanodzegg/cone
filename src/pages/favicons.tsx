@@ -33,7 +33,7 @@ export default function FaviconConversion() {
             <div className="mb-6">
                 <h2 className="text-2xl font-body font-semibold text-foreground">Favicon Generator</h2>
                 <p className="text-sm text-muted-foreground mt-1">
-                    Upload any image and get a complete icon set — .ico + PNG at 16, 32, 48, 128, 256, and 512px.
+                    Upload any image and get a complete icon set — .ico + PNG at 16, 32, 48, 128, 256, 512 and 1024px.
                 </p>
             </div>
 

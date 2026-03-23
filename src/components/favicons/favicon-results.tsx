@@ -2,7 +2,7 @@ import { Button } from "../ui/button"
 import { Download } from "lucide-react"
 import JSZip from "jszip"
 
-const FAVICON_SIZES = [16, 32, 48, 128, 256, 512]
+const FAVICON_SIZES = [16, 32, 48, 64, 128, 256, 512, 1024]
 
 export interface FaviconResult {
     ico: ArrayBuffer
