@@ -122,6 +122,17 @@ function registerWebsitePdfHandlers(mainWindow) {
         })
       })
 
+      // Remove artificial height/min-height from body and common wrappers to prevent blank space after footer
+      await page.evaluate(() => {
+        const selectors = ['body', 'html', '#__next', '#root', '#app', 'main', '[data-reactroot]']
+        selectors.forEach(sel => {
+          document.querySelectorAll(sel).forEach(el => {
+            el.style.setProperty('height', 'auto', 'important')
+            el.style.setProperty('min-height', '0', 'important')
+          })
+        })
+      })
+
       // Strip box-shadow and filter — Chromium renders these as colored blocks at page breaks
       // Also suppress known chat/support widgets that survive fixed-element hiding
       await page.addStyleTag({

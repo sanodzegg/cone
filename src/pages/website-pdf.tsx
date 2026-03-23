@@ -52,6 +52,7 @@ export default function WebsitePdf() {
 
   useEffect(() => {
     return window.electron.onWebsitePdfWaiting(({ waitTime }) => {
+      if (waitTime < 2000) return
       const endAt = Date.now() + waitTime
       setCountdown(Math.ceil(waitTime / 1000))
       const interval = setInterval(() => {
