@@ -13,10 +13,7 @@ import { SettingsConflictDialog } from './components/settings/settings-conflict-
 import { ConversionCountContext, toEngineType } from './lib/ConversionCountContext'
 
 const splash = document.getElementById('splash')
-if (splash) {
-  splash.style.opacity = '0'
-  setTimeout(() => splash.remove(), 300)
-}
+if (splash) splash.remove();
 
 function App() {
   const { user, plan } = useAuth()

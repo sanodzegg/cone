@@ -22,7 +22,8 @@ function createWindow() {
       preload: path.join(__dirname, 'electron/preload.js'),
     },
     resizable: false,
-    backgroundColor: '#09090b',
+    vibrancy: 'fullscreen-ui',
+    backgroundMaterial: 'acrylic'
   })
 
   if (isDev) {
