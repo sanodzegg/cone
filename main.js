@@ -16,6 +16,7 @@ function createWindow() {
     height: 800,
     icon: path.join(__dirname, 'build-assets/icon.icns'),
     webPreferences: {
+      devTools: isDev,
       nodeIntegration: false,
       contextIsolation: true,
       preload: path.join(__dirname, 'electron/preload.js'),
