@@ -10,7 +10,7 @@ import {
     SheetTrigger,
 } from "../ui/sheet";
 import { cn } from "@/lib/utils";
-import { Camera, ChevronRight, FileDown, FilePlus, FolderSync, Globe, ImageIcon, LayoutGrid, User, WifiOff } from "lucide-react";
+import { Camera, ChevronRight, FileDown, FilePlus, FolderSync, Globe, ImageIcon, LayoutGrid, PenLine, User, WifiOff } from "lucide-react";
 import { useAuth } from "@/lib/useAuth";
 
 type SimpleExtension = { kind: 'link'; title: string; description: string; href: string; icon: React.ReactNode }
@@ -18,6 +18,13 @@ type GroupExtension = { kind: 'group'; title: string; icon: React.ReactNode; chi
 type Extension = SimpleExtension | GroupExtension
 
 const extensions: Extension[] = [
+    {
+        kind: 'link',
+        title: 'SVG Editor',
+        description: 'Preview, optimize, and export SVGs as code or Data URI',
+        href: '/extensions/svg-editor',
+        icon: <PenLine className="size-5" />,
+    },
     {
         kind: 'link',
         title: 'Favicon Generator',

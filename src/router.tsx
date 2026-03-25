@@ -9,6 +9,7 @@ import WebsitePdf from "./pages/website-pdf";
 import PdfMerge from "./pages/pdf-merge";
 import Auth from "./pages/auth";
 import Pricing from "./pages/pricing";
+import SvgEditor from "./pages/svg-editor";
 
 export default function Router() {
   return (
@@ -21,6 +22,7 @@ export default function Router() {
         <Route path="/extensions/website-screenshot" element={<WebsiteScreenshot />} />
         <Route path="/extensions/pdf-merge" element={<PdfMerge />} />
         <Route path="/extensions/website-pdf" element={<WebsitePdf />} />
+        <Route path="/extensions/svg-editor" element={<SvgEditor />} />
         <Route path="/account" element={<Auth />} />
         <Route path="/pricing" element={<Pricing />} />
     </Routes>
