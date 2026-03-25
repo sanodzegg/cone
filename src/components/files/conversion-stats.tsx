@@ -5,7 +5,6 @@ import { HelpCircle } from "lucide-react"
 
 interface ConversionStatsProps {
     isDone: boolean
-    currentFileName: string
     progress: number
     convertedCount: number
     convertingTotal: number
@@ -18,7 +17,6 @@ interface ConversionStatsProps {
 
 export default function ConversionStats({
     isDone,
-    currentFileName,
     progress,
     convertedCount,
     convertingTotal,
@@ -34,10 +32,9 @@ export default function ConversionStats({
                 <Tooltip>
                     <TooltipTrigger>
                         <span className="text-accent-foreground/70 truncate max-w-xs cursor-default">
-                            {isDone ? 'Done' : `Converting ${currentFileName}`}
+                            {isDone ? 'Done' : 'Converting…'}
                         </span>
                     </TooltipTrigger>
-                    {!isDone && <TooltipContent><p>{currentFileName}</p></TooltipContent>}
                 </Tooltip>
                 <span className="text-accent-foreground font-medium ml-4 shrink-0">{Math.round(progress)}%</span>
             </div>

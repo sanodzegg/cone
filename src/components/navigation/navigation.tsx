@@ -14,6 +14,7 @@ import { NavigationSecondary } from "./navigation-secondary";
 
 const links = [
     { path: '/', label: 'Convert' },
+    { path: '/pricing', label: 'Pricing' },
     { path: '/settings', label: 'Settings' },
 ]
 

@@ -14,7 +14,6 @@ export default function ConvertedFiles() {
     const convertingTotal = useConvertStore(s => s.convertingTotal)
     const totalInputSize = useConvertStore(s => s.totalInputSize)
     const totalOutputSize = useConvertStore(s => s.totalOutputSize)
-    const currentFileName = useConvertStore(s => s.currentFileName)
     const resetAppState = useConvertStore(s => s.resetConversion);
 
     const [snapshot, setSnapshot] = useState<ConvertedFile[]>([])
@@ -118,7 +117,6 @@ export default function ConvertedFiles() {
 
             <ConversionStats
                 isDone={isDone}
-                currentFileName={currentFileName}
                 progress={progress}
                 convertedCount={convertedCount}
                 convertingTotal={convertingTotal}

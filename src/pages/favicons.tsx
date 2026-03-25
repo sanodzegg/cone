@@ -1,6 +1,7 @@
 import { useState } from "react"
 import FaviconDropzone from "@/components/favicons/favicon-dropzone"
 import FaviconResults, { type FaviconResult } from "@/components/favicons/favicon-results"
+import { useConversionCountContext } from "@/lib/ConversionCountContext"
 
 type State =
     | { status: 'idle' }
@@ -10,6 +11,7 @@ type State =
 
 export default function FaviconConversion() {
     const [state, setState] = useState<State>({ status: 'idle' })
+    const { onConversionSuccess } = useConversionCountContext()
 
     const handleFile = async (file: File) => {
         setState({ status: 'converting' })
@@ -21,6 +23,7 @@ export default function FaviconConversion() {
                 pngs: raw.pngs,
             }
             setState({ status: 'done', result, file })
+            onConversionSuccess('image')
         } catch (e) {
             setState({ status: 'error', message: e instanceof Error ? e.message : 'Conversion failed' })
         }

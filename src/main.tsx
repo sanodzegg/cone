@@ -8,7 +8,9 @@ import { ThemeProvider } from '@/components/theme/theme-provider'
 import Navigation from './components/navigation/navigation'
 import { useAuth } from './lib/useAuth'
 import { useSettingsSync } from './lib/useSettingsSync'
+import { useConversionCount, incrementLocalCount } from './lib/useConversionCount'
 import { SettingsConflictDialog } from './components/settings/settings-conflict-dialog'
+import { ConversionCountContext, toEngineType } from './lib/ConversionCountContext'
 
 const splash = document.getElementById('splash')
 if (splash) {
@@ -17,10 +19,19 @@ if (splash) {
 }
 
 function App() {
-  const { user } = useAuth()
+  const { user, plan } = useAuth()
   const { conflictSettings, localAtConflict, applyRemote, keepLocal } = useSettingsSync(user)
+  const { syncCountToServer } = useConversionCount(user, plan)
+
+  function onConversionSuccess(engineId: string) {
+    const type = toEngineType(engineId)
+    if (!type) return
+    incrementLocalCount(type)
+    syncCountToServer(type)
+  }
+
   return (
-    <>
+    <ConversionCountContext.Provider value={{ onConversionSuccess }}>
       <Navigation />
       <Router />
       {conflictSettings && localAtConflict && (
@@ -31,7 +42,7 @@ function App() {
           onKeepLocal={keepLocal}
         />
       )}
-    </>
+    </ConversionCountContext.Provider>
   )
 }
 

@@ -39,7 +39,7 @@ const INITIAL: BulkState = {
 let idCounter = 0
 const uid = () => String(++idCounter)
 
-export function useBulkConverter() {
+export function useBulkConverter(onConversionSuccess?: (engineId: string) => void) {
   const [state, setState] = useState<BulkState>(INITIAL)
   const watchCleanupRef = useRef<(() => void) | null>(null)
   const defaultOutputFolder = useConvertStore(s => s.defaultOutputFolder)
@@ -51,6 +51,7 @@ export function useBulkConverter() {
         ...s,
         files: [{ ...data, id: uid() }, ...s.files],
       }))
+      if (data.ok) onConversionSuccess?.('image')
     })
     return unsub
   }, [])
@@ -109,6 +110,9 @@ export function useBulkConverter() {
       progress: { done: results.length, total: results.length },
       files: [...results.map(r => ({ ...r, id: uid() }))],
     }))
+
+    const successCount = results.filter((r: { ok: boolean }) => r.ok).length
+    for (let i = 0; i < successCount; i++) onConversionSuccess?.('image')
   }
 
   const toggleWatch = async () => {

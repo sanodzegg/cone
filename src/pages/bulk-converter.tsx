@@ -2,12 +2,14 @@ import { FolderOpen, Play, Eye, RotateCcw, Loader2, AlertTriangle } from 'lucide
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { useBulkConverter } from '@/components/bulk-converter/use-bulk-converter'
+import { useConversionCountContext } from '@/lib/ConversionCountContext'
 import { BulkSettings } from '@/components/bulk-converter/bulk-settings'
 import { BulkFileRow } from '@/components/bulk-converter/bulk-file-row'
 import { BulkSummary } from '@/components/bulk-converter/bulk-summary'
 import { useRef, useEffect } from 'react'
 export default function BulkConverter() {
-  const { state, pickFolder, startConvert, toggleWatch, reset, setSetting, retryFile } = useBulkConverter()
+  const { onConversionSuccess } = useConversionCountContext()
+  const { state, pickFolder, startConvert, toggleWatch, reset, setSetting, retryFile } = useBulkConverter(onConversionSuccess)
   const listRef = useRef<HTMLDivElement>(null)
   const prevFileCountRef = useRef(0)
 

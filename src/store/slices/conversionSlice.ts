@@ -23,7 +23,7 @@ export const createConversionSlice: StateCreator<
   convertingTotal: 0,
   totalInputSize: 0,
   totalOutputSize: 0,
-  currentFileName: '',
+  convertingFiles: new Set<string>(),
 
   setFileSettings: (file, settings) =>
     set((state) => ({
@@ -76,10 +76,18 @@ export const createConversionSlice: StateCreator<
       failedFiles: {},
       totalInputSize: files.reduce((acc, f) => acc + f.size, 0),
       totalOutputSize: 0,
-      currentFileName: '',
+      convertingFiles: new Set<string>(),
     }),
 
-  setCurrentFileName: (name) => set({ currentFileName: name }),
+  markFileConverting: (file) =>
+    set((state) => ({ convertingFiles: new Set([...state.convertingFiles, fileKey(file)]) })),
+
+  unmarkFileConverting: (file) =>
+    set((state) => {
+      const next = new Set(state.convertingFiles)
+      next.delete(fileKey(file))
+      return { convertingFiles: next }
+    }),
 
   resetConversion: () =>
     set({
@@ -91,6 +99,6 @@ export const createConversionSlice: StateCreator<
       convertingTotal: 0,
       totalInputSize: 0,
       totalOutputSize: 0,
-      currentFileName: '',
+      convertingFiles: new Set<string>(),
     }),
 })

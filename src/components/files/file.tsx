@@ -16,6 +16,7 @@ import FileSettingsDialog from "./file-settings-dialog"
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip"
 import { convertSingle } from "@/services/conversionService"
 import { useNavigate } from "react-router-dom"
+import { useConversionCountContext } from "@/lib/ConversionCountContext"
 
 const IMAGE_EXTS = new Set(['jpg', 'jpeg', 'png', 'webp', 'gif', 'bmp', 'tiff', 'tif', 'heic', 'heif', 'avif', 'jfif', 'svg'])
 
@@ -36,21 +37,21 @@ export default function File({ data }: { data: File }) {
     const failedError = useConvertStore(s => s.failedFiles[fileKey(data)] ?? null)
     const removeFile = useConvertStore(s => s.removeFile)
     const setPendingEditorFile = useConvertStore(s => s.setPendingEditorFile)
-    const currentFileName = useConvertStore(s => s.currentFileName)
-    const convertingTotal = useConvertStore(s => s.convertingTotal)
-    const { quality, imageQuality, fileSettings, convertedFiles, startConversion, setConvertedFile, setFailedFile, setCurrentFileName } = useConvertStore()
-    const isConverting = convertingTotal > 0 && currentFileName === data.name
+    const convertingFiles = useConvertStore(s => s.convertingFiles)
+    const { quality, imageQuality, fileSettings, convertedFiles, startConversion, setConvertedFile, setFailedFile, markFileConverting, unmarkFileConverting } = useConvertStore()
+    const { onConversionSuccess } = useConversionCountContext()
     const navigate = useNavigate()
 
     const isImage = ext ? IMAGE_EXTS.has(ext.toLowerCase()) : false
 
     const perFileQuality = fileSettings[fileKey(data)]?.quality
     const engineId = getEngineForFile(data)?.id
+    const isConverting = convertingFiles.has(fileKey(data))
     const effectiveQuality = perFileQuality ?? (engineId === 'image' ? imageQuality : quality)
     const estimatedSize = isImage && targetFormat ? estimateOutputSize(data.size, ext, targetFormat, effectiveQuality) : null
 
     const handleConvertSingle = () => convertSingle(data, {
-        quality, imageQuality, fileSettings, convertedFiles, startConversion, setConvertedFile, setFailedFile, setCurrentFileName, removeFile,
+        quality, imageQuality, fileSettings, convertedFiles, startConversion, setConvertedFile, setFailedFile, markFileConverting, unmarkFileConverting, removeFile, onConversionSuccess,
     })
 
     const handleEditInEditor = () => {

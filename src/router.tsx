@@ -8,6 +8,7 @@ import WebsiteScreenshot from "./pages/website-screenshot";
 import WebsitePdf from "./pages/website-pdf";
 import PdfMerge from "./pages/pdf-merge";
 import Auth from "./pages/auth";
+import Pricing from "./pages/pricing";
 
 export default function Router() {
   return (
@@ -21,6 +22,7 @@ export default function Router() {
         <Route path="/extensions/pdf-merge" element={<PdfMerge />} />
         <Route path="/extensions/website-pdf" element={<WebsitePdf />} />
         <Route path="/account" element={<Auth />} />
+        <Route path="/pricing" element={<Pricing />} />
     </Routes>
   )
 }

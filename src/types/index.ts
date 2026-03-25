@@ -44,7 +44,7 @@ export interface ConversionSliceState {
   convertingTotal: number
   totalInputSize: number
   totalOutputSize: number
-  currentFileName: string
+  convertingFiles: Set<string>
 }
 
 export interface ConversionSliceActions {
@@ -53,7 +53,8 @@ export interface ConversionSliceActions {
   setConvertedFile: (file: File, blob: Blob) => void
   setFailedFile: (file: File, error: string) => void
   startConversion: (files: File[]) => void
-  setCurrentFileName: (name: string) => void
+  markFileConverting: (file: File) => void
+  unmarkFileConverting: (file: File) => void
   resetConversion: () => void
 }
 
