@@ -606,7 +606,7 @@ export default function CropEditor({ file, onReset }: Props) {
         <div ref={containerRef} className="w-full rounded-2xl overflow-hidden border border-border bg-secondary/20">
           <canvas
             ref={canvasRef}
-            className="block"
+            className="block mx-auto"
             onMouseDown={onMouseDown}
             onMouseMove={e => { if (canvasRef.current) canvasRef.current.style.cursor = getCursor(e) }}
           />

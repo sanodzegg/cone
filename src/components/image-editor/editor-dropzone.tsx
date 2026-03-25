@@ -3,8 +3,8 @@ import { Button } from "../ui/button"
 import { useRef } from "react"
 import { Badge } from "../ui/badge"
 
-const ACCEPTED = ['image/png', 'image/jpeg', 'image/webp', 'image/gif']
-const ACCEPTED_EXT = ['PNG', 'JPG', 'WEBP', 'GIF']
+const ACCEPTED = ['image/png', 'image/jpeg', 'image/webp', 'image/gif', 'image/svg+xml']
+const ACCEPTED_EXT = ['PNG', 'JPG', 'WEBP', 'GIF', 'SVG']
 
 interface Props {
     onFile: (file: File) => void

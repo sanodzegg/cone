@@ -16,7 +16,7 @@ function isWindowHidden() {
 }
 
 function createTray() {
-  const iconPath = path.join(__dirname, 'build-assets/tray-logo.png')
+  const iconPath = path.join(__dirname, 'build-assets/tray.png')
   const icon = nativeImage.createFromPath(iconPath)
 
   tray = new Tray(icon)
