@@ -48,15 +48,6 @@ export default function Navigation() {
                                 </NavigationMenuItem>
                             ))}
 
-                            <NavigationMenuItem className={'pointer-events-none'} aria-disabled>
-                                <NavLink to="/history">
-                                    {() => (
-                                        <Button disabled variant="outline" className="font-normal dark:border-secondary">
-                                            History
-                                        </Button>
-                                    )}
-                                </NavLink>
-                            </NavigationMenuItem>
                         </NavigationMenuList>
                     </NavigationMenu>
                 </nav>
