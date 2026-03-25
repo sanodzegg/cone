@@ -10,7 +10,8 @@ import {
     SheetTrigger,
 } from "../ui/sheet";
 import { cn } from "@/lib/utils";
-import { Camera, ChevronRight, FileDown, FilePlus, FolderSync, Globe, ImageIcon, LayoutGrid, WifiOff } from "lucide-react";
+import { Camera, ChevronRight, FileDown, FilePlus, FolderSync, Globe, ImageIcon, LayoutGrid, User, WifiOff } from "lucide-react";
+import { useAuth } from "@/lib/useAuth";
 
 type SimpleExtension = { kind: 'link'; title: string; description: string; href: string; icon: React.ReactNode }
 type GroupExtension = { kind: 'group'; title: string; icon: React.ReactNode; children: { title: string; description: string; href: string; icon: React.ReactNode; disabled?: boolean; requiresInternet?: boolean }[] }
@@ -77,6 +78,7 @@ const extensions: Extension[] = [
 export function NavigationSecondary() {
     const { pathname } = useLocation()
     const isExtensionActive = pathname.startsWith('/extensions')
+    const { user } = useAuth()
     const [open, setOpen] = useState(false)
     const [expandedGroup, setExpandedGroup] = useState<string | null>(
         pathname.startsWith('/extensions/website') ? 'Web' :
@@ -111,11 +113,11 @@ export function NavigationSecondary() {
                     <LayoutGrid className="size-4" />
                     <span className="sr-only">Extensions</span>
                 </SheetTrigger>
-                <SheetContent side="right" className="w-94">
+                <SheetContent side="right" className="w-94 flex flex-col">
                     <SheetHeader>
                         <SheetTitle className={'font-body'}>Extensions</SheetTitle>
                     </SheetHeader>
-                    <div className="flex flex-col gap-2 p-4 pt-0">
+                    <div className="flex flex-col gap-2 p-4 pt-0 flex-1 overflow-y-auto">
                         {extensions.map((ext) => {
                             if (ext.kind === 'link') {
                                 return (
@@ -192,6 +194,24 @@ export function NavigationSecondary() {
                                 </div>
                             )
                         })}
+                    </div>
+                    <div className="p-4 border-t border-border">
+                        <NavLink to="/account">
+                            {({ isActive }) => (
+                                <div className={cn(
+                                    "flex items-center gap-3 rounded-lg p-3 transition-colors cursor-pointer",
+                                    isActive ? "bg-primary/10 text-primary" : "hover:bg-accent text-foreground"
+                                )}>
+                                    <User className={cn("size-5 shrink-0", isActive ? "text-primary" : "text-muted-foreground")} />
+                                    <div>
+                                        <p className="text-sm font-medium leading-none mb-1">Account</p>
+                                        <p className="text-xs text-muted-foreground">
+                                            {user ? user.email : 'Sign in or create an account'}
+                                        </p>
+                                    </div>
+                                </div>
+                            )}
+                        </NavLink>
                     </div>
                 </SheetContent>
             </Sheet>

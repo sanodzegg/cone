@@ -7,6 +7,7 @@ import BulkConverter from "./pages/bulk-converter";
 import WebsiteScreenshot from "./pages/website-screenshot";
 import WebsitePdf from "./pages/website-pdf";
 import PdfMerge from "./pages/pdf-merge";
+import Auth from "./pages/auth";
 
 export default function Router() {
   return (
@@ -19,6 +20,7 @@ export default function Router() {
         <Route path="/extensions/website-screenshot" element={<WebsiteScreenshot />} />
         <Route path="/extensions/pdf-merge" element={<PdfMerge />} />
         <Route path="/extensions/website-pdf" element={<WebsitePdf />} />
+        <Route path="/account" element={<Auth />} />
     </Routes>
   )
 }

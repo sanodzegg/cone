@@ -4,4 +4,5 @@ allowBuilds:
   esbuild: true
   lzma-native: true
   msw: true
+  protobufjs: true
   sharp: true

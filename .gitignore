@@ -31,3 +31,7 @@ Thumbs.db
 
 # Vite
 .vite/
+
+# md
+ARCHITECTURE.md
+PLAN.md
