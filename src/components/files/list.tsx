@@ -7,7 +7,7 @@ import { useConversionCountContext } from "@/lib/ConversionCountContext"
 
 export default function FileList() {
     const { files, fileSettings, quality, imageQuality, convertedCount, convertingTotal, convertedFiles, failedFiles, setConvertedFile, setFailedFile, markFileConverting, unmarkFileConverting, startConversion, removeFile } = useConvertStore()
-    const { onConversionSuccess } = useConversionCountContext()
+    const { onConversionSuccess, onBatchComplete } = useConversionCountContext()
 
     const failedCount = Object.keys(failedFiles).length
     const isConverting = convertingTotal > 0 && (convertedCount + failedCount) < convertingTotal
@@ -26,6 +26,7 @@ export default function FileList() {
             unmarkFileConverting,
             removeFile,
             onConversionSuccess,
+            onBatchComplete,
         })
     }
 

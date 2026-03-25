@@ -30,8 +30,16 @@ function App() {
     syncCountToServer(type)
   }
 
+  function onBatchComplete(successCount: number, totalCount: number) {
+    const failed = totalCount - successCount
+    const body = failed > 0
+      ? `${successCount} converted, ${failed} failed.`
+      : `${successCount} file${successCount !== 1 ? 's' : ''} converted successfully.`
+    window.electron.showNotification('Conversion complete', body)
+  }
+
   return (
-    <ConversionCountContext.Provider value={{ onConversionSuccess }}>
+    <ConversionCountContext.Provider value={{ onConversionSuccess, onBatchComplete }}>
       <Navigation />
       <Router />
       {conflictSettings && localAtConflict && (

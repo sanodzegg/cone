@@ -39,6 +39,9 @@ contextBridge.exposeInMainWorld('electron', {
     return () => ipcRenderer.removeListener('website-pdf-waiting', handler)
   },
 
+  // Tray / notifications
+  showNotification: (title, body) => ipcRenderer.send('show-notification', { title, body }),
+
   // Website screenshot
   screenshotEnsureBrowser: () => ipcRenderer.invoke('screenshot-ensure-browser'),
   screenshotCapture: (opts) => ipcRenderer.invoke('screenshot-capture', opts),

@@ -16,6 +16,7 @@ type ConversionDeps = Pick<
   | 'removeFile'
 > & {
   onConversionSuccess?: (engineId: string) => void
+  onBatchComplete?: (successCount: number, totalCount: number) => void
 }
 
 function getDefaultQualityForFile(file: File, deps: ConversionDeps): number {
@@ -69,16 +70,27 @@ export async function convertAll(files: File[], deps: ConversionDeps): Promise<v
 
   deps.startConversion(pending)
 
+  let successCount = 0
+  const wrappedDeps = {
+    ...deps,
+    onConversionSuccess: (engineId: string) => {
+      successCount++
+      deps.onConversionSuccess?.(engineId)
+    },
+  }
+
   const images = pending.filter((f) => getEngineForFile(f)?.id === 'image')
   const nonImages = pending.filter((f) => getEngineForFile(f)?.id !== 'image')
 
-  const imagePromise = Promise.allSettled(images.map((f) => convertFile(f, deps)))
+  const imagePromise = Promise.allSettled(images.map((f) => convertFile(f, wrappedDeps)))
 
   const nonImagePromise = (async () => {
     for (const f of nonImages) {
-      await convertFile(f, deps)
+      await convertFile(f, wrappedDeps)
     }
   })()
 
   await Promise.all([imagePromise, nonImagePromise])
+
+  deps.onBatchComplete?.(successCount, pending.length)
 }

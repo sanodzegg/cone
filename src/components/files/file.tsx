@@ -39,7 +39,7 @@ export default function File({ data }: { data: File }) {
     const setPendingEditorFile = useConvertStore(s => s.setPendingEditorFile)
     const convertingFiles = useConvertStore(s => s.convertingFiles)
     const { quality, imageQuality, fileSettings, convertedFiles, startConversion, setConvertedFile, setFailedFile, markFileConverting, unmarkFileConverting } = useConvertStore()
-    const { onConversionSuccess } = useConversionCountContext()
+    const { onConversionSuccess, onBatchComplete } = useConversionCountContext()
     const navigate = useNavigate()
 
     const isImage = ext ? IMAGE_EXTS.has(ext.toLowerCase()) : false
@@ -51,7 +51,7 @@ export default function File({ data }: { data: File }) {
     const estimatedSize = isImage && targetFormat ? estimateOutputSize(data.size, ext, targetFormat, effectiveQuality) : null
 
     const handleConvertSingle = () => convertSingle(data, {
-        quality, imageQuality, fileSettings, convertedFiles, startConversion, setConvertedFile, setFailedFile, markFileConverting, unmarkFileConverting, removeFile, onConversionSuccess,
+        quality, imageQuality, fileSettings, convertedFiles, startConversion, setConvertedFile, setFailedFile, markFileConverting, unmarkFileConverting, removeFile, onConversionSuccess, onBatchComplete,
     })
 
     const handleEditInEditor = () => {
