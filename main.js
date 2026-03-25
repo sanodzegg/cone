@@ -10,6 +10,7 @@ const isDev = !app.isPackaged
 
 let mainWindow = null
 let tray = null
+let isQuitting = false
 
 function isWindowHidden() {
   return !mainWindow || !mainWindow.isVisible() || mainWindow.isMinimized()
@@ -22,7 +23,7 @@ function createTray() {
   tray = new Tray(icon)
   tray.setToolTip('Cone')
   tray.setContextMenu(Menu.buildFromTemplate([
-    { label: 'Quit', click: () => app.quit() },
+    { label: 'Quit', click: () => { isQuitting = true; app.quit() } },
   ]))
 
   tray.on('click', () => {
@@ -48,6 +49,7 @@ function createWindow() {
 
   // Hide to tray instead of closing
   mainWindow.on('close', (e) => {
+    if (isQuitting) return
     e.preventDefault()
     mainWindow.hide()
   })
