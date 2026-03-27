@@ -63,7 +63,7 @@ export function PricingCard({
                 </div>
 
                 <div>
-                    <CardTitle className="text-xl mb-2 font-body font-medium">{title}</CardTitle>
+                    <CardTitle className="text-2xl mb-2 font-body font-medium">{title}</CardTitle>
                     <div className="flex items-center gap-1.5">
                         {displayPrice === 0 ? (
                             <span className="text-4xl font-medium text-foreground leading-none">FREE</span>
