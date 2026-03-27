@@ -2,7 +2,7 @@ import { useConvertStore } from "@/store/useConvertStore"
 import { useEffect, useState } from "react"
 import type { ConvertedFile } from "@/types"
 import { Button } from "../ui/button"
-import { Download, RefreshCcw } from "lucide-react"
+import { Download, Loader2, RefreshCcw } from "lucide-react"
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip"
 import ConversionStats from "./conversion-stats"
 
@@ -16,6 +16,7 @@ export default function ConvertedFiles() {
     const resetAppState = useConvertStore(s => s.resetConversion);
 
     const [snapshot, setSnapshot] = useState<ConvertedFile[]>([])
+    const [isZipping, setIsZipping] = useState(false)
 
     useEffect(() => {
         const incoming = Object.values(convertedFiles)
@@ -58,13 +59,18 @@ export default function ConvertedFiles() {
             handleDownload(snapshot[0].blob, snapshot[0].name)
             return
         }
-        const JSZip = (await import('jszip')).default
-        const zip = new JSZip()
-        for (const f of snapshot) {
-            zip.file(f.name, f.blob)
+        setIsZipping(true)
+        try {
+            const JSZip = (await import('jszip')).default
+            const zip = new JSZip()
+            for (const f of snapshot) {
+                zip.file(f.name, f.blob)
+            }
+            const blob = await zip.generateAsync({ type: 'blob' })
+            handleDownload(blob, 'converted.zip')
+        } finally {
+            setIsZipping(false)
         }
-        const blob = await zip.generateAsync({ type: 'blob' })
-        handleDownload(blob, 'converted.zip')
     }
 
     return (
@@ -74,8 +80,8 @@ export default function ConvertedFiles() {
                     Converted ({snapshot.length}){failedEntries.length > 0 && <span className="text-destructive ml-2">· {failedEntries.length} failed</span>}
                 </h3>
                 <div className="flex items-center gap-x-2">
-                    <Button onClick={downloadAll} disabled={!isDone} variant={'secondary'} className={'group p-2.5! h-full!'}>
-                        <Download className="size-5" />
+                    <Button onClick={downloadAll} disabled={!isDone || isZipping} variant={'secondary'} className={'group p-2.5! h-full!'}>
+                        {isZipping ? <Loader2 className="size-5 animate-spin" /> : <Download className="size-5" />}
                     </Button>
                     <Tooltip>
                         <TooltipTrigger>
@@ -92,11 +98,11 @@ export default function ConvertedFiles() {
             {snapshot.length > 0 && (
                 <ul className="space-y-2.5">
                     {snapshot.map((f) => (
-                        <li key={f.name} className="flex items-center justify-between p-4 rounded-2xl border border-accent bg-secondary/30">
+                        <li key={`${f.name}-${f.inputSize}`} className="flex items-center justify-between p-4 rounded-2xl border border-accent bg-secondary/30">
                             <div className="flex items-center gap-2 min-w-0">
                                 <Tooltip>
-                                    <TooltipTrigger>
-                                        <span className="text-sm text-accent-foreground font-body truncate cursor-default">{f.name}</span>
+                                    <TooltipTrigger className="flex-1 min-w-0 text-left">
+                                        <span className="text-sm text-accent-foreground font-body truncate cursor-default block w-full">{f.name}</span>
                                     </TooltipTrigger>
                                     <TooltipContent><p>{f.name}</p></TooltipContent>
                                 </Tooltip>

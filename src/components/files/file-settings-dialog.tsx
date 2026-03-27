@@ -39,24 +39,34 @@ export default function FileSettingsDialog({ file }: { file: File }) {
     const [keepMetadata, setKeepMetadata] = useState<boolean>(fileSettings?.keepMetadata ?? true)
     const [quality, setQuality] = useState<number>(fileSettings?.quality ?? imageQuality)
 
+    const syncFromStore = () => {
+        setWidth(fileSettings?.width?.toString() ?? '')
+        setHeight(fileSettings?.height?.toString() ?? '')
+        setFit(fileSettings?.fit ?? 'max')
+        setKeepMetadata(fileSettings?.keepMetadata ?? true)
+        setQuality(fileSettings?.quality ?? imageQuality)
+    }
+
     const handleSave = () => {
         setFileSettings(file, {
             ...(isImage || isVideo ? {
                 width: width ? parseInt(width) : undefined,
                 height: height ? parseInt(height) : undefined,
-                fit,
+                fit: (width || height) ? fit : undefined,
             } : {}),
-            ...(isImage ? { keepMetadata, quality } : {}),
+            ...(isImage ? {
+                keepMetadata: keepMetadata !== true ? keepMetadata : undefined,
+                quality: quality !== imageQuality ? quality : undefined,
+            } : {}),
         })
     }
 
     const hasSettings = isImage || isVideo
     const isCustomized = !!(
-        fileSettings?.quality !== undefined ||
         fileSettings?.width ||
         fileSettings?.height ||
-        fileSettings?.fit ||
-        fileSettings?.keepMetadata !== undefined
+        (fileSettings?.quality !== undefined && fileSettings.quality !== imageQuality) ||
+        fileSettings?.keepMetadata === false
     )
 
     if (!hasSettings) {
@@ -68,7 +78,7 @@ export default function FileSettingsDialog({ file }: { file: File }) {
     }
 
     return (
-        <Dialog>
+        <Dialog onOpenChange={open => { if (open) syncFromStore() }}>
             <DialogTrigger
                 render={
                     <Button variant="secondary" className="group p-2.5! h-full!">

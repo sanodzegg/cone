@@ -17,8 +17,9 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip"
 import { convertSingle } from "@/services/conversionService"
 import { useNavigate } from "react-router-dom"
 import { useConversionCountContext } from "@/lib/ConversionCountContext"
+import { IMAGE_INPUT_EXTENSIONS } from "@/engines/imageEngine"
 
-const IMAGE_EXTS = new Set(['jpg', 'jpeg', 'png', 'webp', 'gif', 'bmp', 'tiff', 'tif', 'heic', 'heif', 'avif', 'jfif', 'svg'])
+const IMAGE_EXTS = new Set(IMAGE_INPUT_EXTENSIONS)
 
 export default function File({ data }: { data: File }) {
     const ext = getExtension(data)
@@ -38,7 +39,7 @@ export default function File({ data }: { data: File }) {
     const removeFile = useConvertStore(s => s.removeFile)
     const setPendingEditorFile = useConvertStore(s => s.setPendingEditorFile)
     const convertingFiles = useConvertStore(s => s.convertingFiles)
-    const { quality, imageQuality, fileSettings, convertedFiles, startConversion, setConvertedFile, setFailedFile, markFileConverting, unmarkFileConverting } = useConvertStore()
+    const { quality, imageQuality, fileSettings, convertedFiles, convertingFiles: convertingFilesMap, startConversion, setConvertedFile, setFailedFile, markFileConverting, unmarkFileConverting } = useConvertStore()
     const { onConversionSuccess, onBatchComplete } = useConversionCountContext()
     const navigate = useNavigate()
 
@@ -51,7 +52,7 @@ export default function File({ data }: { data: File }) {
     const estimatedSize = isImage && targetFormat ? estimateOutputSize(data.size, ext, targetFormat, effectiveQuality) : null
 
     const handleConvertSingle = () => convertSingle(data, {
-        quality, imageQuality, fileSettings, convertedFiles, startConversion, setConvertedFile, setFailedFile, markFileConverting, unmarkFileConverting, removeFile, onConversionSuccess, onBatchComplete,
+        quality, imageQuality, fileSettings, convertedFiles, convertingFiles: convertingFilesMap, startConversion, setConvertedFile, setFailedFile, markFileConverting, unmarkFileConverting, removeFile, onConversionSuccess, onBatchComplete,
     })
 
     const handleEditInEditor = () => {
@@ -66,7 +67,7 @@ export default function File({ data }: { data: File }) {
             <Badge variant={'secondary'} className="shrink-0 uppercase h-10 w-10 rounded-sm mr-2" style={colorStyle}>
                 {ext}
             </Badge>
-            <div className="flex flex-col min-w-0 w-100 shrink-0">
+            <div className="flex flex-col min-w-0 flex-1">
                 <h3 className="text-sm font-normal text-accent-foreground font-body truncate">{data.name}</h3>
                 {failedError
                     ? <p className="text-xs font-normal text-destructive">{failedError}</p>
@@ -86,7 +87,7 @@ export default function File({ data }: { data: File }) {
                     : <MoveRight size={24} className="stroke-accent" />
                 }
             </div>
-            <div className="flex items-center gap-2 min-w-75 justify-end">
+            <div className="flex items-center gap-2 shrink-0 justify-end">
                 <Combobox value={targetFormat} onValueChange={(v) => !isConverting && setTargetFormat(data, v ?? convertTo[0])} items={convertTo}>
                     <ComboboxInput className={'w-24! h-10! [&_input]:uppercase! [&_input]:select-none!'} readOnly />
                     <ComboboxContent>
@@ -102,10 +103,10 @@ export default function File({ data }: { data: File }) {
                 <Tooltip>
                     <TooltipTrigger>
                         <FileSettingsDialog file={data} />
-                        <TooltipContent>
-                            <p className="text-sm font-light text-accent">File Settings</p>
-                        </TooltipContent>
                     </TooltipTrigger>
+                    <TooltipContent>
+                        <p className="text-sm font-light text-accent">File Settings</p>
+                    </TooltipContent>
                 </Tooltip>
                 {isImage && (
                     <Tooltip>
@@ -113,10 +114,10 @@ export default function File({ data }: { data: File }) {
                             <Button variant={'secondary'} className={'group p-2.5! h-full!'} onClick={handleEditInEditor}>
                                 <Pencil className="size-4" />
                             </Button>
-                            <TooltipContent>
-                                <p className="text-sm font-light text-accent">Edit in Image Editor</p>
-                            </TooltipContent>
                         </TooltipTrigger>
+                        <TooltipContent>
+                            <p className="text-sm font-light text-accent">Edit in Image Editor</p>
+                        </TooltipContent>
                     </Tooltip>
                 )}
                 <Tooltip>
@@ -124,16 +125,27 @@ export default function File({ data }: { data: File }) {
                         <Button variant={'secondary'} className={'group p-2.5! h-full!'} onClick={handleConvertSingle}>
                             <ArrowRightIcon className="transition-transform group-hover:translate-x-0.5 size-5" />
                         </Button>
-                        <TooltipContent>
-                            <p className="text-sm font-light text-accent">Convert Single</p>
-                        </TooltipContent>
                     </TooltipTrigger>
+                    <TooltipContent>
+                        <p className="text-sm font-light text-accent">Convert Single</p>
+                    </TooltipContent>
                 </Tooltip>
-                {failedError && (
-                    <Button variant="destructive" size="icon" onClick={() => removeFile(data)}>
-                        <X className="size-4" />
-                    </Button>
-                )}
+                <Tooltip>
+                    <TooltipTrigger>
+                        <Button
+                            variant={failedError ? 'destructive' : 'ghost'}
+                            size="icon"
+                            className="shrink-0"
+                            disabled={isConverting}
+                            onClick={() => removeFile(data)}
+                        >
+                            <X className="size-4" />
+                        </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                        <p className="text-sm font-light text-accent">Remove</p>
+                    </TooltipContent>
+                </Tooltip>
             </div>
         </div>
     )

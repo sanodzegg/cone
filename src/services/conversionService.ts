@@ -8,6 +8,7 @@ type ConversionDeps = Pick<
   | 'imageQuality'
   | 'fileSettings'
   | 'convertedFiles'
+  | 'convertingFiles'
   | 'startConversion'
   | 'setConvertedFile'
   | 'setFailedFile'
@@ -30,6 +31,8 @@ export async function convertSingle(file: File, deps: ConversionDeps): Promise<v
 }
 
 async function convertFile(file: File, deps: ConversionDeps): Promise<void> {
+  if (deps.convertingFiles.has(fileKey(file))) return
+
   const engine = getEngineForFile(file)
   if (!engine) {
     deps.setFailedFile(file, 'No engine available for this file type')

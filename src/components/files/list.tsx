@@ -6,11 +6,11 @@ import { convertAll } from "@/services/conversionService"
 import { useConversionCountContext } from "@/lib/ConversionCountContext"
 
 export default function FileList() {
-    const { files, fileSettings, quality, imageQuality, convertedCount, convertingTotal, convertedFiles, failedFiles, setConvertedFile, setFailedFile, markFileConverting, unmarkFileConverting, startConversion, removeFile } = useConvertStore()
+    const { files, fileSettings, quality, imageQuality, convertedCount, convertingTotal, convertingFiles, convertedFiles, failedFiles, setConvertedFile, setFailedFile, markFileConverting, unmarkFileConverting, startConversion, removeFile } = useConvertStore()
     const { onConversionSuccess, onBatchComplete } = useConversionCountContext()
 
     const failedCount = Object.keys(failedFiles).length
-    const isConverting = convertingTotal > 0 && (convertedCount + failedCount) < convertingTotal
+    const isConverting = convertingFiles.size > 0 || (convertingTotal > 0 && (convertedCount + failedCount) < convertingTotal)
     const allDone = files.length > 0 && files.every(f => !!convertedFiles[fileKey(f)])
 
     const handleConvertAll = async () => {
@@ -19,6 +19,7 @@ export default function FileList() {
             imageQuality,
             fileSettings,
             convertedFiles,
+            convertingFiles,
             startConversion,
             setConvertedFile,
             setFailedFile,
