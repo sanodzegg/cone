@@ -130,6 +130,8 @@ electron/
 
 ### PDF Merge
 - Pick multiple PDFs → merge into one → save
+- Drag-to-reorder file list, per-file remove, file size shown inline
+- Filename truncated with tooltip showing full name (TooltipTrigger needs `flex-1 min-w-0` to participate in flex layout)
 
 ### Settings
 - Image quality default (slider with live comparison preview)
@@ -226,9 +228,29 @@ All tables have RLS enabled. Trigger `on_auth_user_created` auto-inserts into `u
 
 ---
 
+## Lazy Loading Architecture
+
+All route-level pages are loaded via `React.lazy` in `src/router.tsx`, wrapped in a single top-level `<Suspense>`. This covers all lazy children — no need for nested `<Suspense>` boundaries in individual pages.
+
+Heavy components also lazy-loaded:
+- `SvgCodeEditor` (CodeMirror ~120KB) — lazy in `svg-editor.tsx`
+- `CropEditor` — lazy in `image-editor.tsx`
+- `FaviconResults` — lazy in `favicons.tsx` (type imported separately with `import type`)
+
+Heavy libraries dynamically imported at call-site:
+- `JSZip` — dynamic import inside `downloadAll` in `converted.tsx` and `favicon-results.tsx`
+- `svgo` — dynamic import inside `optimizeSvg` in `svg-utils.ts`
+
+Because `optimizeSvg` is async, `toMinifiedUri` and `toCodeSnippet` are also async. In `svg-editor.tsx`, any value derived from these uses `useEffect` + `useState` instead of `useMemo`.
+
+Named export lazy pattern: `lazy(() => import('...').then(m => ({ default: m.NamedExport })))`
+
+---
+
 ## Dev Notes
 
 - No responsive breakpoints — desktop-only app, no `sm:`/`md:`/`lg:` classes
 - Icon colors use full opacity only — no `/40` or similar opacity variants on icon colors
 - Commit messages: single line, no body, no bullet points, no co-author trailer
 - shadcn components: never overwrite existing files on install
+- `TooltipTrigger` renders as an inline element by default — add `flex-1 min-w-0` directly to it (not a child span) when truncation inside a flex row is needed
