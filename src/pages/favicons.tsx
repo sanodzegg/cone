@@ -1,6 +1,8 @@
-import { useState } from "react"
+import { useState, lazy } from "react"
 import FaviconDropzone from "@/components/favicons/favicon-dropzone"
-import FaviconResults, { type FaviconResult } from "@/components/favicons/favicon-results"
+import type { FaviconResult } from "@/components/favicons/favicon-results"
+
+const FaviconResults = lazy(() => import("@/components/favicons/favicon-results"))
 import { useConversionCountContext } from "@/lib/ConversionCountContext"
 
 type State =

@@ -1,9 +1,8 @@
-import { optimize } from 'svgo'
-
 // ── SVGO ──────────────────────────────────────────────────────────────────────
 
-export function optimizeSvg(code: string): string {
+export async function optimizeSvg(code: string): Promise<string> {
     try {
+        const { optimize } = await import('svgo')
         const result = optimize(code, { plugins: ['preset-default'] })
         return result.data
     } catch {
@@ -28,8 +27,8 @@ export function toEncodedUri(code: string): string {
     return `data:image/svg+xml,${encodeURIComponent(code)}`
 }
 
-export function toMinifiedUri(code: string): string {
-    return `data:image/svg+xml,${encodeURIComponent(optimizeSvg(code))}`
+export async function toMinifiedUri(code: string): Promise<string> {
+    return `data:image/svg+xml,${encodeURIComponent(await optimizeSvg(code))}`
 }
 
 // ── Prettify ──────────────────────────────────────────────────────────────────
@@ -114,7 +113,7 @@ function stripBoilerplate(code: string): string {
         .trim()
 }
 
-export function toCodeSnippet(code: string, format: CodeFormat): string {
+export async function toCodeSnippet(code: string, format: CodeFormat): Promise<string> {
     const clean = stripBoilerplate(code)
 
     switch (format) {
@@ -186,8 +185,8 @@ export class SvgIconComponent {
         }
 
         case 'Img': {
-            const uri = toBase64Uri(optimizeSvg(code))
-            return `<img src="${uri}" alt="icon" width="24" height="24" />`
+            const opt = await optimizeSvg(code)
+            return `<img src="${toBase64Uri(opt)}" alt="icon" width="24" height="24" />`
         }
 
         default: return code

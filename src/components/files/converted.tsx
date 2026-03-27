@@ -4,7 +4,6 @@ import type { ConvertedFile } from "@/types"
 import { Button } from "../ui/button"
 import { Download, RefreshCcw } from "lucide-react"
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip"
-import JSZip from "jszip"
 import ConversionStats from "./conversion-stats"
 
 export default function ConvertedFiles() {
@@ -59,6 +58,7 @@ export default function ConvertedFiles() {
             handleDownload(snapshot[0].blob, snapshot[0].name)
             return
         }
+        const JSZip = (await import('jszip')).default
         const zip = new JSZip()
         for (const f of snapshot) {
             zip.file(f.name, f.blob)

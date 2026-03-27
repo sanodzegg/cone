@@ -1,30 +1,34 @@
+import { lazy, Suspense } from "react";
 import { Route, Routes } from "react-router-dom";
-import Homepage from "./pages/homepage";
-import Settings from "./pages/settings";
-import FaviconConversion from "./pages/favicons";
-import ImageEditor from "./pages/image-editor";
-import BulkConverter from "./pages/bulk-converter";
-import WebsiteScreenshot from "./pages/website-screenshot";
-import WebsitePdf from "./pages/website-pdf";
-import PdfMerge from "./pages/pdf-merge";
-import Auth from "./pages/auth";
-import Pricing from "./pages/pricing";
-import SvgEditor from "./pages/svg-editor";
+
+const Homepage = lazy(() => import('./pages/homepage'))
+const Settings = lazy(() => import('./pages/settings'))
+const FaviconConversion = lazy(() => import('./pages/favicons'))
+const ImageEditor = lazy(() => import('./pages/image-editor'))
+const BulkConverter = lazy(() => import('./pages/bulk-converter'))
+const WebsiteScreenshot = lazy(() => import('./pages/website-screenshot'))
+const WebsitePdf = lazy(() => import('./pages/website-pdf'))
+const PdfMerge = lazy(() => import('./pages/pdf-merge'))
+const Auth = lazy(() => import('./pages/auth'))
+const Pricing = lazy(() => import('./pages/pricing'))
+const SvgEditor = lazy(() => import('./pages/svg-editor'))
 
 export default function Router() {
   return (
-    <Routes>
-        <Route index element={<Homepage />} />
-        <Route path="/settings" element={<Settings />} />
-        <Route path="/extensions/favicon" element={<FaviconConversion />} />
-        <Route path="/extensions/image-editor" element={<ImageEditor />} />
-        <Route path="/extensions/bulk-converter" element={<BulkConverter />} />
-        <Route path="/extensions/website-screenshot" element={<WebsiteScreenshot />} />
-        <Route path="/extensions/pdf-merge" element={<PdfMerge />} />
-        <Route path="/extensions/website-pdf" element={<WebsitePdf />} />
-        <Route path="/extensions/svg-editor" element={<SvgEditor />} />
-        <Route path="/account" element={<Auth />} />
-        <Route path="/pricing" element={<Pricing />} />
-    </Routes>
+    <Suspense>
+      <Routes>
+          <Route index element={<Homepage />} />
+          <Route path="/settings" element={<Settings />} />
+          <Route path="/extensions/favicon" element={<FaviconConversion />} />
+          <Route path="/extensions/image-editor" element={<ImageEditor />} />
+          <Route path="/extensions/bulk-converter" element={<BulkConverter />} />
+          <Route path="/extensions/website-screenshot" element={<WebsiteScreenshot />} />
+          <Route path="/extensions/pdf-merge" element={<PdfMerge />} />
+          <Route path="/extensions/website-pdf" element={<WebsitePdf />} />
+          <Route path="/extensions/svg-editor" element={<SvgEditor />} />
+          <Route path="/account" element={<Auth />} />
+          <Route path="/pricing" element={<Pricing />} />
+      </Routes>
+    </Suspense>
   )
 }

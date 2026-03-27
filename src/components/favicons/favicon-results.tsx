@@ -1,7 +1,6 @@
 import { useMemo, useEffect } from "react"
 import { Button } from "../ui/button"
 import { Download } from "lucide-react"
-import JSZip from "jszip"
 import icnsReadme from "./icns-readme.txt?raw"
 
 
@@ -60,6 +59,7 @@ export default function FaviconResults({ result, sourceFile, onReset }: Props) {
     ]
 
     const downloadAll = async () => {
+        const JSZip = (await import('jszip')).default
         const zip = new JSZip()
         zip.file('favicon.ico', result.ico)
 

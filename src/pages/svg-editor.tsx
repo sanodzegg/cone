@@ -1,15 +1,16 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect, lazy } from 'react'
 import { RotateCcw, Check, Copy, Download } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Combobox, ComboboxInput, ComboboxContent, ComboboxList, ComboboxItem } from '@/components/ui/combobox'
 import { cn } from '@/lib/utils'
 import SvgDropzone from '@/components/svg-editor/svg-dropzone'
-import { SvgCodeEditor } from '@/components/svg-editor/SvgCodeEditor'
 import {
     optimizeSvg, prettifySvg, extractMeta,
     toBase64Uri, toEncodedUri, toMinifiedUri,
     byteSize, toCodeSnippet, CODE_FORMAT_OPTIONS, type CodeFormat,
 } from '@/components/svg-editor/svg-utils'
+
+const SvgCodeEditor = lazy(() => import('@/components/svg-editor/SvgCodeEditor').then(m => ({ default: m.SvgCodeEditor })))
 
 type Tab = 'preview' | 'code' | 'data-uri'
 
@@ -79,19 +80,33 @@ export default function SvgEditor() {
     const [tab, setTab] = useState<Tab>('preview')
     const [bg, setBg] = useState('white')
     const [codeFormat, setCodeFormat] = useState<CodeFormat>('SVG')
-
-    const optimizedCode = useMemo(() => optimizeSvg(code ?? ''), [code])
-
-    const savings = useMemo(() => {
-        if (!code) return 0
-        const before = new TextEncoder().encode(code).length
-        const after = new TextEncoder().encode(optimizedCode).length
-        return before === 0 ? 0 : Math.round((1 - after / before) * 100)
-    }, [code, optimizedCode])
+    const [optimizedCode, setOptimizedCode] = useState('')
+    const [savings, setSavings] = useState(0)
+    const [displayCode, setDisplayCode] = useState('')
+    const [minifiedUri, setMinifiedUri] = useState('')
 
     const activeCode = code ?? ''
+
+    useEffect(() => {
+        if (!code) { setOptimizedCode(''); setSavings(0); return }
+        optimizeSvg(code).then(opt => {
+            setOptimizedCode(opt)
+            const before = new TextEncoder().encode(code).length
+            const after = new TextEncoder().encode(opt).length
+            setSavings(before === 0 ? 0 : Math.round((1 - after / before) * 100))
+        })
+    }, [code])
+
+    useEffect(() => {
+        toCodeSnippet(activeCode, codeFormat).then(setDisplayCode)
+    }, [activeCode, codeFormat])
+
+    useEffect(() => {
+        if (tab !== 'data-uri') return
+        toMinifiedUri(activeCode).then(setMinifiedUri)
+    }, [activeCode, tab])
+
     const previewHtml = useMemo(() => preparePreview(activeCode), [activeCode])
-    const displayCode = useMemo(() => toCodeSnippet(activeCode, codeFormat), [activeCode, codeFormat])
     const bgClass = BG_OPTIONS.find(b => b.value === bg)?.class ?? 'bg-white'
     const meta = useMemo(() => extractMeta(activeCode), [activeCode])
     const fileSize = useMemo(() => byteSize(activeCode), [activeCode])
@@ -261,7 +276,7 @@ export default function SvgEditor() {
                         <div className="flex flex-col gap-4 flex-1 overflow-y-auto">
                             <DataUriRow label="Base64" value={toBase64Uri(activeCode)} />
                             <DataUriRow label="encodeURIComponent" value={toEncodedUri(activeCode)} />
-                            <DataUriRow label="Minified (encodeURIComponent)" value={toMinifiedUri(activeCode)} />
+                            <DataUriRow label="Minified (encodeURIComponent)" value={minifiedUri} />
                         </div>
                     )}
                 </div>

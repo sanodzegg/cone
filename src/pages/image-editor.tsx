@@ -1,6 +1,7 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, lazy } from "react"
 import EditorDropzone from "@/components/image-editor/editor-dropzone"
-import CropEditor from "@/components/image-editor/crop-editor"
+
+const CropEditor = lazy(() => import("@/components/image-editor/crop-editor"))
 import { useConvertStore } from "@/store/useConvertStore"
 
 export default function ImageEditor() {

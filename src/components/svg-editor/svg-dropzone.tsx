@@ -58,13 +58,8 @@ export default function SvgDropzone({ onSvg }: Props) {
                     onDragLeave={() => setDragging(false)}
                     className={`flex flex-col items-center justify-center py-10 w-full h-72 border border-dashed border-border rounded-3xl transition-colors gap-4 cursor-pointer ${dragging ? 'bg-accent border-primary' : 'hover:border-primary'}`}
                 >
-                    <Button
-                        type="button"
-                        variant="outline"
-                        className="w-16 h-16 border-border hover:border-primary transition-colors"
-                        onClick={() => inputRef.current?.click()}
-                    >
-                        <Import className="size-8 stroke-primary" />
+                    <Button onClick={() => inputRef.current?.click()} variant="outline" className="w-20 h-20 border-border hover:border-primary transition-colors">
+                        <Import className="size-10 stroke-primary" />
                     </Button>
                     <div className="text-center">
                         <h2 className="text-xl font-body font-semibold text-foreground">Drop an SVG file here</h2>

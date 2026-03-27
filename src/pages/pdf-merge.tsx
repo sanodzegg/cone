@@ -149,8 +149,8 @@ export default function PdfMerge() {
                     <GripVertical className="size-3.5 text-muted-foreground shrink-0 cursor-grab" />
                     <span className="text-[10px] text-muted-foreground w-4 shrink-0">{i + 1}</span>
                     <Tooltip>
-                      <TooltipTrigger>
-                        <span className="flex-1 truncate text-foreground cursor-default">{f.name}</span>
+                      <TooltipTrigger className="flex-1 min-w-0 text-left">
+                        <span className="truncate text-foreground cursor-default block w-full">{f.name}</span>
                       </TooltipTrigger>
                       <TooltipContent><p>{f.name}</p></TooltipContent>
                     </Tooltip>
