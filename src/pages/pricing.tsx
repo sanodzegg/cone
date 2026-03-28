@@ -67,7 +67,7 @@ export default function Pricing() {
 
     return (
         <section className="relative overflow-hidden min-h-[calc(100vh-var(--nav-height))]">
-            <div className='section py-8'>
+            <div className='section py-8 2xl:py-12'>
                 <video
                     src={pricingBg}
                     autoPlay
@@ -78,11 +78,11 @@ export default function Pricing() {
                     className="absolute inset-0 w-full h-full object-cover pointer-events-none hidden dark:block transition-opacity duration-700"
                     style={{ opacity: videoReady ? .7 : 0 }}
                 />
-                <div className="relative z-10 mb-10 text-center">
-                    <h2 className="text-4xl font-body font-semibold text-foreground mb-3">Simple, transparent pricing</h2>
-                    <p className="text-sm text-muted-foreground">No subscriptions required. Start free, upgrade when you need more.</p>
+                <div className="relative z-10 mb-10 2xl:mb-14 text-center">
+                    <h2 className="text-4xl 2xl:text-5xl font-body font-semibold text-foreground mb-3 2xl:mb-4">Simple, transparent pricing</h2>
+                    <p className="text-sm 2xl:text-base text-muted-foreground">No subscriptions required. Start free, upgrade when you need more.</p>
                 </div>
-                <div className="relative z-10 grid grid-cols-3 gap-4 items-center">
+                <div className="relative z-10 grid grid-cols-3 gap-4 2xl:gap-6 items-center">
                     {PLANS.map(p => {
                         const isCurrent =
                             (p.id === 'trial' && plan === 'trial') ||
