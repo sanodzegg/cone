@@ -23,14 +23,14 @@ export default function Navigation() {
         <section className="flex border-b border-b-gray-200 dark:border-b-gray-50/10 h-(--nav-height)">
             <div className="flex items-center justify-between py-2.5 section w-full">
                 <NavLink to={'/'} className="flex items-center justify-center gap-x-1 shrink-0">
-                    <img src={LogoLight} alt="Cone logo" className="select-none pointer-events-none h-8 w-8 dark:hidden" />
-                    <img src={LogoDark} alt="Cone logo" className="select-none pointer-events-none h-8 w-8 hidden dark:block" />
-                    <h1 className="text-4xl text-black dark:text-white">Cone</h1>
+                    <img src={LogoLight} alt="Cone logo" className="select-none pointer-events-none h-8 w-8 2xl:h-12 2xl:w-12 dark:hidden" />
+                    <img src={LogoDark} alt="Cone logo" className="select-none pointer-events-none h-8 w-8 2xl:h-12 2xl:w-12 hidden dark:block" />
+                    <h1 className="text-4xl 2xl:text-5xl text-black dark:text-white">Cone</h1>
                 </NavLink>
 
                 <nav className="w-full flex justify-end mr-10">
                     <NavigationMenu>
-                        <NavigationMenuList className="gap-x-4">
+                        <NavigationMenuList className="gap-x-4 2xl:gap-x-5">
                             {links.map((link) => (
                                 <NavigationMenuItem key={link.path}>
                                     <NavLink to={link.path}>
@@ -40,7 +40,7 @@ export default function Navigation() {
                                                 active={isActive}
                                                 className={cn(navigationMenuTriggerStyle(), "p-0 bg-transparent hover:bg-transparent focus:bg-transparent data-active:bg-transparent")}
                                             >
-                                                <Button variant={isActive ? 'default' : 'outline'} className="font-normal dark:border-secondary pointer-events-none">
+                                                <Button variant={isActive ? 'default' : 'outline'} className="font-normal 2xl:text-base 2xl:h-10 2xl:px-5 dark:border-secondary pointer-events-none">
                                                     {link.label}
                                                 </Button>
                                             </NavigationMenuLink>

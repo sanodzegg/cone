@@ -57,6 +57,10 @@
   --badge-pdf-bg: #fff3e8;  --badge-pdf-border: #ffc8a0;  --badge-pdf-text: #c03000;
   --badge-docx-bg: #e8f0ff; --badge-docx-border: #a0c0ff; --badge-docx-text: #0038c0;
   --badge-txt-bg: #f5f5f5;  --badge-txt-border: #d0d0d0;  --badge-txt-text: #404040;
+
+  @media (width >= 96rem) {
+    --nav-height: 84px;
+  }
 }
 
 .dark {
