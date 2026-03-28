@@ -12,7 +12,7 @@ let mainWindow = null
 
 function createWindow() {
   const { width: sw, height: sh } = screen.getPrimaryDisplay().workAreaSize
-  const width = Math.min(Math.max(Math.round(sw * 0.9), 1100), 1800)
+  const width = Math.min(Math.max(Math.round(sw * 0.8), 1100), 1800)
   const height = Math.min(Math.max(Math.round(sh * 0.95), 720), 1200)
 
   mainWindow = new BrowserWindow({
