@@ -220,7 +220,7 @@ All tables have RLS enabled. Trigger `on_auth_user_created` auto-inserts into `u
 - Connected in: homepage file converter, bulk converter, favicon generator
 
 ### Trial limits
-- Image: 500 | Document: 500 | Video: 100
+- Image: 100 | Document: 50 | Video: 10
 - `isAtLimit(engine, plan)` — returns true only for `plan === 'trial'` at/over limit
 - Limit enforcement UI (upgrade prompt + navigate to `/pricing`) — not yet implemented
 

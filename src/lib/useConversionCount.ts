@@ -14,9 +14,9 @@ const STORAGE_KEY = 'cone_conversion_counts'
 const DAILY_STORAGE_KEY = 'cone_daily_counts'
 
 const LIMITS: ConversionCounts = {
-    image: 200,
-    document: 150,
-    video: 50,
+    image: 100,
+    document: 50,
+    video: 20,
 }
 
 const DAILY_LIMITS: ConversionCounts = {
