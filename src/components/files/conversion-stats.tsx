@@ -1,6 +1,7 @@
 import { formatBytes } from "@/utils/fileUtils"
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip"
 import { HelpCircle } from "lucide-react"
+import { useTheme } from "../theme/theme-provider"
 
 
 interface ConversionStatsProps {
@@ -26,6 +27,7 @@ export default function ConversionStats({
     totalOutputSize,
     totalInputSize,
 }: ConversionStatsProps) {
+    const { theme } = useTheme()
     return (
         <div className="mt-6 2xl:mt-8 p-4 2xl:p-5 rounded-2xl border border-accent bg-secondary/30 space-y-3 2xl:space-y-4">
             <div className="flex items-center justify-between text-sm 2xl:text-base">
@@ -37,7 +39,7 @@ export default function ConversionStats({
             <div className="h-2 2xl:h-2.5 w-full rounded-full bg-accent overflow-hidden">
                 <div
                     className="h-full rounded-full transition-all duration-300"
-                    style={{ width: `${progress}%`, background: 'linear-gradient(to right, #7c3aed, #a855f7)' }}
+                    style={{ width: `${progress}%`, background: `${theme === 'dark' ? 'linear-gradient(to right, #7c3aed, #a855f7)' : 'black'}` }}
                 />
             </div>
             <div className="grid grid-cols-3 gap-3 2xl:gap-4 pt-1">

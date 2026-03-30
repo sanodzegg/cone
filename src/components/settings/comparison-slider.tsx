@@ -1,5 +1,7 @@
 import { useRef, useState, useCallback, useEffect } from 'react'
-import presentationImg from '@/assets/presentation.jpeg'
+import presentationImg from '@/assets/presentation.jpg'
+import presentationImgLight from '@/assets/presentation-light.jpg'
+import { useTheme } from '../theme/theme-provider'
 
 interface Props {
   quality: number
@@ -13,6 +15,9 @@ export default function ComparisonSlider({ quality }: Props) {
   const containerRef = useRef<HTMLDivElement>(null)
   const sourceBufferRef = useRef<ArrayBuffer | null>(null)
   const dragging = useRef(false)
+
+  const { theme } = useTheme()
+  const presentationImage = theme === 'dark' ? presentationImg : presentationImgLight
 
   async function encode(buffer: ArrayBuffer, q: number) {
     setEncoding(true)
@@ -96,7 +101,7 @@ export default function ComparisonSlider({ quality }: Props) {
         />
       ) : (
         <img
-          src={presentationImg}
+          src={presentationImage}
           alt="placeholder"
           draggable={false}
           className="absolute inset-0 w-full h-full object-cover"
@@ -106,7 +111,7 @@ export default function ComparisonSlider({ quality }: Props) {
 
       <div className="absolute inset-0 overflow-hidden" style={{ clipPath: `inset(0 ${100 - position}% 0 0)` }}>
         <img
-          src={presentationImg}
+          src={presentationImage}
           alt="original"
           draggable={false}
           onLoad={onImgLoad}
