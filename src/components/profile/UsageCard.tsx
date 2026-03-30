@@ -39,9 +39,10 @@ export function UsageCard({ plan, counts }: UsageCardProps) {
         plan === 'limited' || counts.video >= TRIAL_LIMITS.video
             ? { label: 'Videos', used: daily.video, limit: LIMITED_DAILY_LIMITS.video, isDaily: true }
             : { label: 'Videos', used: counts.video, limit: TRIAL_LIMITS.video, isDaily: false },
+        plan === 'limited' || counts.audio >= TRIAL_LIMITS.audio
+            ? { label: 'Audio', used: daily.audio, limit: LIMITED_DAILY_LIMITS.audio, isDaily: true }
+            : { label: 'Audio', used: counts.audio, limit: TRIAL_LIMITS.audio, isDaily: false },
     ] : []
-
-    const anyLimited = isFreeplan && rows.some(r => r.isDaily)
 
     return (
         <div className="rounded-2xl border border-border p-5 space-y-3">
@@ -62,11 +63,9 @@ export function UsageCard({ plan, counts }: UsageCardProps) {
                             </div>
                         ))}
                     </div>
-                    {anyLimited && (
-                        <Button variant="default" className="w-full" onClick={() => navigate('/pricing')}>
-                            Upgrade to Pro
-                        </Button>
-                    )}
+                    <Button variant="default" className="w-fit" onClick={() => navigate('/pricing')}>
+                        {plan === 'trial' ? 'Upgrade to Limited or Pro' : 'Upgrade to Pro'}
+                    </Button>
                 </div>
             ) : (
                 <div className="space-y-1">

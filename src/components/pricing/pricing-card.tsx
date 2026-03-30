@@ -135,7 +135,7 @@ export function PricingCard({
             </CardContent>
 
             <CardFooter className="relative">
-                <Button variant={ctaVariant} className="w-full 2xl:h-11 2xl:text-base" disabled={badge === 'current'}>
+                <Button variant={ctaVariant} className="w-full h-10 2xl:h-11 2xl:text-base" disabled={badge === 'current'}>
                     {badge === 'current' ? 'Current Plan' : ctaLabel}
                 </Button>
             </CardFooter>

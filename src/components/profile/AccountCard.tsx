@@ -26,7 +26,7 @@ export function AccountCard({ user, plan }: AccountCardProps) {
     }
 
     return (
-        <div className="rounded-2xl border border-border p-5 space-y-4">
+        <div className="rounded-2xl border border-border p-5 space-y-4 flex flex-col">
             <div className="space-y-1">
                 <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Account</p>
                 <p className="text-sm font-medium text-foreground">{user.email}</p>
@@ -41,7 +41,7 @@ export function AccountCard({ user, plan }: AccountCardProps) {
                     {isTrial ? 'Limited conversions — upgrade for unlimited access.' : 'Unlimited conversions.'}
                 </p>
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-2 flex-1 items-end">
                 {isTrial && <Button size="sm" onClick={() => navigate('/pricing')}>Upgrade</Button>}
                 <Button variant="outline" size="sm" onClick={handleSignOut}>Sign out</Button>
             </div>

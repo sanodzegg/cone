@@ -18,6 +18,7 @@ export function useConversionCountContext() {
 export function toEngineType(engineId: string): EngineType | null {
     if (engineId === 'image') return 'image'
     if (engineId === 'document') return 'document'
-    if (engineId === 'video' || engineId === 'audio') return 'video'
+    if (engineId === 'video') return 'video'
+    if (engineId === 'audio') return 'audio'
     return null
 }
