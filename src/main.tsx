@@ -26,9 +26,9 @@ function App() {
     const type = toEngineType(engineId)
     if (!type) return
     syncCountToServer()
-    if (plan === 'trial' && user && isTrialExhausted()) {
+    if (plan === 'trial' && isTrialExhausted()) {
       setPlan('limited')
-      supabase.from('users').update({ plan: 'limited' }).eq('id', user.id).then(({ error }) => {
+      if (user) supabase.from('users').update({ plan: 'limited' }).eq('id', user.id).then(({ error }) => {
         if (error) console.error('[auth] failed to persist limited plan:', error)
       })
     }
