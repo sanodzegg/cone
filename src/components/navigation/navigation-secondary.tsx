@@ -10,8 +10,9 @@ import {
     SheetTrigger,
 } from "../ui/sheet";
 import { cn } from "@/lib/utils";
-import { Camera, ChevronRight, FileDown, FilePlus, FolderSync, Globe, ImageIcon, LayoutGrid, PenLine, User, WifiOff } from "lucide-react";
+import { Camera, ChevronRight, FileDown, FilePlus, FolderSync, Globe, ImageIcon, LayoutGrid, PenLine, Tag, User, WifiOff } from "lucide-react";
 import { useAuth } from "@/lib/useAuth";
+import { PRICING_DISMISSED_KEY } from "./navigation";
 
 type SimpleExtension = { kind: 'link'; title: string; description: string; href: string; icon: React.ReactNode }
 type GroupExtension = { kind: 'group'; title: string; icon: React.ReactNode; children: { title: string; description: string; href: string; icon: React.ReactNode; disabled?: boolean; requiresInternet?: boolean }[] }
@@ -92,12 +93,17 @@ export function NavigationSecondary() {
             pathname.startsWith('/extensions/pdf') ? 'PDF' : null
     )
     const [isOnline, setIsOnline] = useState(navigator.onLine)
+    const [showPricing, setShowPricing] = useState(false);
 
     useEffect(() => {
         const on = () => setIsOnline(true)
         const off = () => setIsOnline(false)
         window.addEventListener('online', on)
         window.addEventListener('offline', off)
+
+        const userHidPricing = localStorage.getItem(PRICING_DISMISSED_KEY)
+        if (userHidPricing === 'true') setShowPricing(true)
+
         return () => { window.removeEventListener('online', on); window.removeEventListener('offline', off) }
     }, [])
 
@@ -202,7 +208,22 @@ export function NavigationSecondary() {
                             )
                         })}
                     </div>
-                    <div className="p-4 border-t border-border">
+                    <div className="p-4 border-t border-border flex flex-col gap-y-2">
+                        {showPricing &&
+                            <NavLink to={'/pricing'}>
+                                {({ isActive }) => (
+                                    <div className={cn(
+                                        "flex items-center gap-2.5 rounded-lg p-2.5 2xl:p-3 transition-colors cursor-pointer",
+                                        isActive ? "bg-primary/10 text-primary" : "hover:bg-accent text-foreground"
+                                    )}>
+                                        <Tag className={cn("size-5 shrink-0", isActive ? "text-primary" : "text-muted-foreground")} />
+                                        <div>
+                                            <p className="text-sm 2xl:text-base font-medium leading-none mb-0.5">Pricing</p>
+                                        </div>
+                                    </div>
+                                )}
+                            </NavLink>
+                        }
                         <NavLink to="/account">
                             {({ isActive }) => (
                                 <div className={cn(

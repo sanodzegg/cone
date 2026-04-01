@@ -12,6 +12,7 @@ import { useConversionCount, isTrialExhausted } from './lib/useConversionCount'
 import { supabase } from './lib/supabase'
 import { SettingsConflictDialog } from './components/settings/settings-conflict-dialog'
 import { ConversionCountContext, toEngineType } from './lib/ConversionCountContext'
+import { Toaster } from './components/ui/sonner'
 
 const splash = document.getElementById('splash')
 if (splash) splash.remove();
@@ -60,6 +61,7 @@ createRoot(document.getElementById('root')!).render(
     <BrowserRouter>
       <ThemeProvider>
         <App />
+        <Toaster />
       </ThemeProvider>
     </BrowserRouter>
   </StrictMode>
