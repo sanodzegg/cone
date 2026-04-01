@@ -6,7 +6,7 @@ import { createRoot } from 'react-dom/client'
 import { HashRouter as BrowserRouter } from 'react-router-dom'
 import { ThemeProvider } from '@/components/theme/theme-provider'
 import Navigation from './components/navigation/navigation'
-import { useAuth } from './lib/useAuth'
+import { useAuthStore } from './store/useAuthStore'
 import { useSettingsSync } from './lib/useSettingsSync'
 import { useConversionCount, isTrialExhausted } from './lib/useConversionCount'
 import { supabase } from './lib/supabase'
@@ -18,17 +18,19 @@ const splash = document.getElementById('splash')
 if (splash) splash.remove();
 
 function App() {
-  const { user, plan, setPlan } = useAuth()
+  const { user, plan, setPlan } = useAuthStore()
   const { conflictSettings, localAtConflict, applyRemote, keepLocal } = useSettingsSync(user)
   const { syncCountToServer } = useConversionCount(user, plan)
 
   function onConversionSuccess(engineId: string) {
     const type = toEngineType(engineId)
     if (!type) return
-    syncCountToServer(type)
+    syncCountToServer()
     if (plan === 'trial' && user && isTrialExhausted()) {
       setPlan('limited')
-      supabase.from('users').update({ plan: 'limited' }).eq('id', user.id)
+      supabase.from('users').update({ plan: 'limited' }).eq('id', user.id).then(({ error }) => {
+        if (error) console.error('[auth] failed to persist limited plan:', error)
+      })
     }
   }
 

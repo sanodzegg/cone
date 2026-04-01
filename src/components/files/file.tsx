@@ -9,7 +9,8 @@ import {
 import { ArrowRightIcon, Loader2, MoveRight, Pencil, X } from "lucide-react"
 import { useConvertStore } from "@/store/useConvertStore"
 import { fileKey, getExtension, formatBytes } from "@/utils/fileUtils"
-import { getFormatsForFile, getEngineForFile } from "@/engines/engineRegistry"
+import { getFormatsForFile, getEngineForFile, isFormatLocked } from "@/engines/engineRegistry"
+import { Lock } from "lucide-react"
 import { estimateOutputSize, isLearnedEstimate } from "@/utils/estimateSize"
 import { Button } from "../ui/button"
 import FileSettingsDialog from "./file-settings-dialog"
@@ -33,7 +34,8 @@ export default function File({ data }: { data: File }) {
 
     const convertTo = getFormatsForFile(data)
 
-    const targetFormat = useConvertStore(s => s.fileSettings[fileKey(data)]?.targetFormat ?? convertTo[0])
+    const rawTargetFormat = useConvertStore(s => s.fileSettings[fileKey(data)]?.targetFormat ?? convertTo[0])
+    const targetFormat = convertTo.includes(rawTargetFormat) ? rawTargetFormat : convertTo[0]
     const setTargetFormat = useConvertStore(s => s.setTargetFormat)
     const isDone = useConvertStore(s => !!s.convertedFiles[fileKey(data)])
     const failedError = useConvertStore(s => s.failedFiles[fileKey(data)] ?? null)
@@ -97,15 +99,27 @@ export default function File({ data }: { data: File }) {
                 }
             </div>
             <div className="flex items-center gap-2 shrink-0 justify-end min-w-70.5 2xl:min-w-84">
-                <Combobox value={targetFormat} onValueChange={(v) => !isConverting && setTargetFormat(data, v ?? convertTo[0])} items={convertTo}>
+                <Combobox value={targetFormat} onValueChange={(v) => {
+                    if (!v || isConverting) return
+                    const locked = plan === 'limited' && engineId ? isFormatLocked(engineId, v) : false
+                    if (!locked) setTargetFormat(data, v)
+                }} items={convertTo}>
                     <ComboboxInput className={`w-24! h-10! 2xl:w-28! 2xl:h-11! [&_input]:uppercase! [&_input]:select-none! ${isConverting ? 'opacity-50 pointer-events-none' : ''}`} readOnly />
                     <ComboboxContent>
                         <ComboboxList>
-                            {(item) => (
-                                <ComboboxItem className={'uppercase'} key={item} value={item}>
-                                    {item}
-                                </ComboboxItem>
-                            )}
+                            {(item) => {
+                                const locked = plan === 'limited' && engineId ? isFormatLocked(engineId, item) : false
+                                return (
+                                    <ComboboxItem
+                                        className={`uppercase ${locked ? 'opacity-40 cursor-not-allowed pointer-events-none' : ''}`}
+                                        key={item}
+                                        value={item}
+                                    >
+                                        <span className="flex-1">{item}</span>
+                                        {locked && <Lock className="size-3 shrink-0" />}
+                                    </ComboboxItem>
+                                )
+                            }}
                         </ComboboxList>
                     </ComboboxContent>
                 </Combobox>

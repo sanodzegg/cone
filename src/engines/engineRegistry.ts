@@ -21,10 +21,22 @@ export function getEngineForFile(file: File): ConversionEngine | null {
   return extensionToEngine.get(ext) ?? null
 }
 
-export function getFormatsForFile(file: File): string[] {
+export const LIMITED_OUTPUT_FORMATS: Record<string, string[]> = {
+  image: ['jpg', 'png', 'webp'],
+  video: ['mp4', 'webm'],
+  audio: ['mp3', 'aac', 'flac', 'wav'],
+}
+
+export function isFormatLocked(engineId: string, format: string): boolean {
+  const allowed = LIMITED_OUTPUT_FORMATS[engineId]
+  if (!allowed) return false
+  return !allowed.includes(format)
+}
+
+export function getFormatsForFile(file: File, limited = false): string[] {
   const engine = getEngineForFile(file)
   if (!engine) return []
-  const ext = getExtension(file)
+  if (limited && LIMITED_OUTPUT_FORMATS[engine.id]) return LIMITED_OUTPUT_FORMATS[engine.id]
   return engine.outputFormats
 }
 

@@ -10,12 +10,12 @@ import {
     SheetTrigger,
 } from "../ui/sheet";
 import { cn } from "@/lib/utils";
-import { Camera, ChevronRight, FileDown, FilePlus, FolderSync, Globe, ImageIcon, LayoutGrid, PenLine, Tag, User, WifiOff } from "lucide-react";
+import { Camera, ChevronRight, FileDown, FilePlus, FolderSync, Globe, ImageIcon, LayoutGrid, Lock, PenLine, Tag, User, WifiOff } from "lucide-react";
 import { useAuth } from "@/lib/useAuth";
 import { PRICING_DISMISSED_KEY } from "./navigation";
 
-type SimpleExtension = { kind: 'link'; title: string; description: string; href: string; icon: React.ReactNode }
-type GroupExtension = { kind: 'group'; title: string; icon: React.ReactNode; children: { title: string; description: string; href: string; icon: React.ReactNode; disabled?: boolean; requiresInternet?: boolean }[] }
+type SimpleExtension = { kind: 'link'; title: string; description: string; href: string; icon: React.ReactNode; proOnly?: boolean }
+type GroupExtension = { kind: 'group'; title: string; icon: React.ReactNode; proOnly?: boolean; children: { title: string; description: string; href: string; icon: React.ReactNode; disabled?: boolean; requiresInternet?: boolean; proOnly?: boolean }[] }
 type Extension = SimpleExtension | GroupExtension
 
 const extensions: Extension[] = [
@@ -39,6 +39,7 @@ const extensions: Extension[] = [
         description: 'Crop, transform, and adjust images',
         href: '/extensions/image-editor',
         icon: <ImageIcon className="size-5" />,
+        proOnly: true,
     },
     {
         kind: 'link',
@@ -46,11 +47,13 @@ const extensions: Extension[] = [
         description: 'Convert all images in a folder recursively',
         href: '/extensions/bulk-converter',
         icon: <FolderSync className="size-5" />,
+        proOnly: true,
     },
     {
         kind: 'group',
         title: 'Web',
         icon: <Globe className="size-5" />,
+        proOnly: true,
         children: [
             {
                 title: 'Screenshot',
@@ -86,7 +89,8 @@ const extensions: Extension[] = [
 export function NavigationSecondary() {
     const { pathname } = useLocation()
     const isExtensionActive = pathname.startsWith('/extensions')
-    const { user } = useAuth()
+    const { user, plan } = useAuth()
+    const isLimited = plan === 'limited'
     const [open, setOpen] = useState(false)
     const [expandedGroup, setExpandedGroup] = useState<string | null>(
         pathname.startsWith('/extensions/website') ? 'Web' :
@@ -134,6 +138,17 @@ export function NavigationSecondary() {
                     <div className="flex flex-col gap-2 p-4 pt-0 flex-1 overflow-y-auto">
                         {extensions.map((ext) => {
                             if (ext.kind === 'link') {
+                                const locked = isLimited && !!ext.proOnly
+                                if (locked) return (
+                                    <div key={ext.href} className="flex items-start gap-3 rounded-lg p-3 2xl:p-4 opacity-50 cursor-not-allowed">
+                                        <div className="mt-0.5 shrink-0 text-muted-foreground">{ext.icon}</div>
+                                        <div className="flex-1">
+                                            <p className="text-sm 2xl:text-base font-medium leading-none mb-1">{ext.title}</p>
+                                            <p className="text-xs 2xl:text-sm text-muted-foreground">{ext.description}</p>
+                                        </div>
+                                        <Lock className="size-4 shrink-0 text-muted-foreground mt-0.5" />
+                                    </div>
+                                )
                                 return (
                                     <NavLink key={ext.href} to={ext.href}>
                                         {({ isActive }) => (
@@ -156,21 +171,26 @@ export function NavigationSecondary() {
 
                             const isGroupActive = ext.children.some(c => pathname === c.href)
                             const isExpanded = expandedGroup === ext.title
+                            const groupLocked = isLimited && !!ext.proOnly
 
                             return (
                                 <div key={ext.title}>
                                     <button
-                                        onClick={() => setExpandedGroup(isExpanded ? null : ext.title)}
+                                        onClick={() => !groupLocked && setExpandedGroup(isExpanded ? null : ext.title)}
                                         className={cn(
-                                            "w-full flex items-center gap-3 rounded-lg p-3 2xl:p-4 transition-colors cursor-pointer",
-                                            isGroupActive ? "bg-primary/10 text-primary" : "hover:bg-accent text-foreground"
+                                            "w-full flex items-center gap-3 rounded-lg p-3 2xl:p-4 transition-colors",
+                                            groupLocked ? "opacity-50 cursor-not-allowed" : "cursor-pointer",
+                                            !groupLocked && (isGroupActive ? "bg-primary/10 text-primary" : "hover:bg-accent text-foreground")
                                         )}
                                     >
-                                        <div className={cn("shrink-0", isGroupActive ? "text-primary" : "text-muted-foreground")}>
+                                        <div className={cn("shrink-0", isGroupActive && !groupLocked ? "text-primary" : "text-muted-foreground")}>
                                             {ext.icon}
                                         </div>
                                         <span className="text-sm 2xl:text-base font-medium flex-1 text-left">{ext.title}</span>
-                                        <ChevronRight className={cn("size-4 2xl:size-5 text-muted-foreground transition-transform", isExpanded && "rotate-90")} />
+                                        {groupLocked
+                                            ? <Lock className="size-4 shrink-0 text-muted-foreground" />
+                                            : <ChevronRight className={cn("size-4 2xl:size-5 text-muted-foreground transition-transform", isExpanded && "rotate-90")} />
+                                        }
                                     </button>
                                     {isExpanded && (
                                         <div className="ml-4 mt-1 flex flex-col gap-1 border-l border-border pl-3">

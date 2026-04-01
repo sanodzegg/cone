@@ -64,7 +64,7 @@ export function UsageCard({ plan, counts }: UsageCardProps) {
                         ))}
                     </div>
                     <Button variant="default" className="w-fit" onClick={() => navigate('/pricing')}>
-                        {plan === 'trial' ? 'Upgrade to Limited or Pro' : 'Upgrade to Pro'}
+                        Upgrade to Pro or Lifetime
                     </Button>
                 </div>
             ) : (

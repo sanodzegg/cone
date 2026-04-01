@@ -1,7 +1,9 @@
 import { useConvertStore } from '@/store/useConvertStore'
+import { useAuth } from '@/lib/useAuth'
 import { imageEngine } from '@/engines/imageEngine'
 import { documentEngine } from '@/engines/documentEngine'
 import { videoEngine } from '@/engines/videoEngine'
+import { isFormatLocked } from '@/engines/engineRegistry'
 import {
     Combobox,
     ComboboxInput,
@@ -9,31 +11,46 @@ import {
     ComboboxList,
     ComboboxItem,
 } from '@/components/ui/combobox'
+import { Lock } from 'lucide-react'
 
 interface FormatPickerProps {
     label: string
     description: string
     value: string
     formats: string[]
+    engineId: string
+    limited: boolean
     onChange: (v: string) => void
 }
 
-function FormatPicker({ label, description, value, formats, onChange }: FormatPickerProps) {
+function FormatPicker({ label, description, value, formats, engineId, limited, onChange }: FormatPickerProps) {
     return (
         <div className="flex items-center justify-between">
             <div>
                 <p className="text-sm 2xl:text-base font-medium text-primary">{label}</p>
                 <p className="text-xs 2xl:text-sm text-muted-foreground mt-0.5">{description}</p>
             </div>
-            <Combobox value={value} onValueChange={(v) => v && onChange(v)} items={formats} filter={null}>
+            <Combobox value={value} onValueChange={(v) => {
+                if (!v) return
+                const locked = limited ? isFormatLocked(engineId, v) : false
+                if (!locked) onChange(v)
+            }} items={formats} filter={null}>
                 <ComboboxInput className={'w-28! h-9! 2xl:w-32! 2xl:h-10! [&_input]:uppercase! [&_input]:select-none!'} readOnly />
                 <ComboboxContent>
                     <ComboboxList>
-                        {(item) => (
-                            <ComboboxItem className={'uppercase'} key={item} value={item}>
-                                {item}
-                            </ComboboxItem>
-                        )}
+                        {(item) => {
+                            const locked = limited ? isFormatLocked(engineId, item) : false
+                            return (
+                                <ComboboxItem
+                                    className={`uppercase ${locked ? 'opacity-40 cursor-not-allowed pointer-events-none' : ''}`}
+                                    key={item}
+                                    value={item}
+                                >
+                                    <span className="flex-1">{item}</span>
+                                    {locked && <Lock className="size-3 shrink-0" />}
+                                </ComboboxItem>
+                            )
+                        }}
                     </ComboboxList>
                 </ComboboxContent>
             </Combobox>
@@ -48,6 +65,8 @@ export default function DefaultFormat() {
     const setDefaultImageFormat = useConvertStore(s => s.setDefaultImageFormat)
     const setDefaultDocumentFormat = useConvertStore(s => s.setDefaultDocumentFormat)
     const setDefaultVideoFormat = useConvertStore(s => s.setDefaultVideoFormat)
+    const { plan } = useAuth()
+    const limited = plan === 'limited'
 
     return (
         <div className="p-5 2xl:p-6 rounded-2xl border border-accent bg-secondary/30 space-y-5 2xl:space-y-6">
@@ -61,6 +80,8 @@ export default function DefaultFormat() {
                     description="JPG, PNG, WEBP, AVIF..."
                     value={defaultImageFormat}
                     formats={imageEngine.outputFormats}
+                    engineId="image"
+                    limited={limited}
                     onChange={setDefaultImageFormat}
                 />
                 <FormatPicker
@@ -68,6 +89,8 @@ export default function DefaultFormat() {
                     description="PDF, DOCX, TXT..."
                     value={defaultDocumentFormat}
                     formats={documentEngine.outputFormats}
+                    engineId="document"
+                    limited={limited}
                     onChange={setDefaultDocumentFormat}
                 />
                 <FormatPicker
@@ -75,6 +98,8 @@ export default function DefaultFormat() {
                     description="MP4, MOV, AVI, MKV..."
                     value={defaultVideoFormat}
                     formats={videoEngine.outputFormats}
+                    engineId="video"
+                    limited={limited}
                     onChange={setDefaultVideoFormat}
                 />
             </div>

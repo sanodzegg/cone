@@ -72,7 +72,7 @@ export function getDailyCounts(): DailyCounts {
 
 export function isTrialExhausted(): boolean {
     const counts = getLocal()
-    return counts.image >= LIMITS.image && counts.document >= LIMITS.document && counts.video >= LIMITS.video && counts.audio >= LIMITS.audio
+    return counts.image >= LIMITS.image || counts.document >= LIMITS.document || counts.video >= LIMITS.video || counts.audio >= LIMITS.audio
 }
 
 function getLocal(): ConversionCounts {
@@ -168,7 +168,7 @@ export function useConversionCount(user: User | null, plan: string) {
     }, [user, plan])
 
     // When online, sync local increments to server
-    function syncCountToServer(engine: EngineType) {
+    function syncCountToServer() {
         if (!user || !navigator.onLine) return
         const counts = getLocal()
         supabase.from('conversion_counts').upsert({
