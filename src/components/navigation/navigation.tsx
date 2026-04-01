@@ -67,7 +67,7 @@ export default function Navigation() {
                                                     {link.label}
                                                 </Button>
                                                 {link.path === '/pricing' && (
-                                                    <Button variant={'ghost'} onClick={dismissPricing} className="absolute bg-muted cursor-pointer pointer-events-auto! rounded-full! p-0.5! h-fit! -top-1 -right-2">
+                                                    <Button variant={'ghost'} onClick={(e) => { e.preventDefault(); e.stopPropagation(); dismissPricing() }} className="absolute bg-muted cursor-pointer pointer-events-auto! rounded-full! p-0.5! h-fit! -top-1 -right-2">
                                                         <X className="text-accent-foreground" />
                                                     </Button>
                                                 )}
