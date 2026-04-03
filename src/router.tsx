@@ -14,6 +14,7 @@ const Auth = lazy(() => import('./pages/auth'))
 const Pricing = lazy(() => import('./pages/pricing'))
 const SvgEditor = lazy(() => import('./pages/svg-editor'))
 const BatchRename = lazy(() => import('./pages/batch-rename'))
+const PaletteExtractor = lazy(() => import('./pages/palette-extractor'))
 
 function ProRoute({ children }: { children: React.ReactNode }) {
   const { plan } = useAuth()
@@ -33,6 +34,7 @@ export default function Router() {
           <Route path="/extensions/image-editor" element={<ProRoute><ImageEditor /></ProRoute>} />
           <Route path="/extensions/bulk-converter" element={<ProRoute><BulkConverter /></ProRoute>} />
           <Route path="/extensions/batch-rename" element={<BatchRename />} />
+          <Route path="/extensions/palette-extractor" element={<PaletteExtractor />} />
           <Route path="/extensions/website-screenshot" element={<ProRoute><WebsiteScreenshot /></ProRoute>} />
           <Route path="/extensions/website-pdf" element={<ProRoute><WebsitePdf /></ProRoute>} />
           <Route path="/account" element={<Auth />} />

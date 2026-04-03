@@ -102,7 +102,6 @@ const extensions: Extension[] = [
                 description: 'Extract dominant colors from any image',
                 href: '/extensions/palette-extractor',
                 icon: <Pipette className="size-5" />,
-                disabled: true,
             },
             {
                 title: 'SVG Editor',
