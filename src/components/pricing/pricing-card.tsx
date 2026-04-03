@@ -46,7 +46,7 @@ export function PricingCard({
         : price
 
     return (
-        <Card className="relative border-border backdrop-blur-xl bg-muted/50 dark:bg-black/30 dark:border-white/20">
+        <Card className={cn("relative border-border backdrop-blur-xl flex flex-col bg-muted/50 dark:bg-black/30 dark:border-white/20", title === 'Pro' ? "h-full" : "h-[calc(100%-40px)]")}>
             <div className="pointer-events-none absolute inset-0 rounded-2xl overflow-hidden bg-linear-to-br from-foreground/10 to-transparent" />
 
             {badge && badge !== 'current' && (
@@ -134,7 +134,7 @@ export function PricingCard({
                 </ul>
             </CardContent>
 
-            <CardFooter className="relative">
+            <CardFooter className="relative mt-auto">
                 <Button variant={ctaVariant} className="w-full h-10 2xl:h-11 2xl:text-base" disabled={badge === 'current'}>
                     {badge === 'current' ? 'Current Plan' : ctaLabel}
                 </Button>
