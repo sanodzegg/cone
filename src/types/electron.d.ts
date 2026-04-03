@@ -62,6 +62,12 @@ declare interface Window {
     screenshotSave: (opts: { buffer: number[]; format: string; url: string }) => Promise<{ canceled: boolean; filePath?: string }>
     onScreenshotBrowserStatus: (cb: (data: { status: 'downloading' | 'ready' | 'error'; error?: string }) => void) => () => void
 
+    // Batch rename
+    batchRenamePickFolder: () => Promise<string | null>
+    batchRenameScan: (opts: { folderPath: string }) => Promise<{ name: string; dir: string }[]>
+    batchRenamePreview: (opts: { files: { name: string; dir: string }[]; rules: object }) => Promise<{ original: string; newName: string; dir: string; changed: boolean }[]>
+    batchRenameApply: (opts: { preview: { original: string; newName: string; dir: string; changed: boolean }[] }) => Promise<{ ok: boolean; original: string; newName?: string; error?: string }[]>
+
     // Auto-download
     pickDownloadFolder: () => Promise<string | null>
     saveConvertedFile: (folderPath: string, fileName: string, buffer: ArrayBuffer) => Promise<string>

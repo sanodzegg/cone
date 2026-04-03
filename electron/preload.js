@@ -43,6 +43,12 @@ contextBridge.exposeInMainWorld('electron', {
   pickDownloadFolder: () => ipcRenderer.invoke('pick-download-folder'),
   saveConvertedFile: (folderPath, fileName, buffer) => ipcRenderer.invoke('save-converted-file', folderPath, fileName, buffer),
 
+  // Batch rename
+  batchRenamePickFolder: () => ipcRenderer.invoke('batch-rename-pick-folder'),
+  batchRenameScan: (opts) => ipcRenderer.invoke('batch-rename-scan', opts),
+  batchRenamePreview: (opts) => ipcRenderer.invoke('batch-rename-preview', opts),
+  batchRenameApply: (opts) => ipcRenderer.invoke('batch-rename-apply', opts),
+
   // Tray / notifications
   showNotification: (title, body) => ipcRenderer.send('show-notification', { title, body }),
 

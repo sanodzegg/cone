@@ -13,6 +13,7 @@ const PdfMerge = lazy(() => import('./pages/pdf-merge'))
 const Auth = lazy(() => import('./pages/auth'))
 const Pricing = lazy(() => import('./pages/pricing'))
 const SvgEditor = lazy(() => import('./pages/svg-editor'))
+const BatchRename = lazy(() => import('./pages/batch-rename'))
 
 function ProRoute({ children }: { children: React.ReactNode }) {
   const { plan } = useAuth()
@@ -31,6 +32,7 @@ export default function Router() {
           <Route path="/extensions/pdf-merge" element={<PdfMerge />} />
           <Route path="/extensions/image-editor" element={<ProRoute><ImageEditor /></ProRoute>} />
           <Route path="/extensions/bulk-converter" element={<ProRoute><BulkConverter /></ProRoute>} />
+          <Route path="/extensions/batch-rename" element={<BatchRename />} />
           <Route path="/extensions/website-screenshot" element={<ProRoute><WebsiteScreenshot /></ProRoute>} />
           <Route path="/extensions/website-pdf" element={<ProRoute><WebsitePdf /></ProRoute>} />
           <Route path="/account" element={<Auth />} />

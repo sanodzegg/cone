@@ -6,6 +6,7 @@ const { registerScreenshotHandlers } = require('./electron/screenshot')
 const { registerPdfToolsHandlers } = require('./electron/pdf-tools')
 const { registerWebsitePdfHandlers } = require('./electron/website-pdf')
 const { registerFileSaveHandlers } = require('./electron/file-save')
+const { registerBatchRenameHandlers } = require('./electron/batch-rename')
 
 const isDev = !app.isPackaged
 
@@ -36,6 +37,7 @@ function createWindow() {
   } else {
     mainWindow.loadFile(path.join(__dirname, 'dist/index.html'))
   }
+
 }
 
 ipcMain.on('show-notification', (_e, { title, body }) => {
@@ -52,6 +54,7 @@ app.whenReady().then(() => {
   registerPdfToolsHandlers(mainWindow)
   registerWebsitePdfHandlers(mainWindow)
   registerFileSaveHandlers(mainWindow)
+  registerBatchRenameHandlers()
 })
 
 app.on('window-all-closed', () => {

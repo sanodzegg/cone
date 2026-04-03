@@ -120,7 +120,7 @@ const extensions: Extension[] = [
     },
     {
         kind: 'group',
-        title: 'Batch',
+        title: 'Batch Operations',
         icon: <FolderSync className="size-5" />,
         children: [
             {
@@ -135,7 +135,6 @@ const extensions: Extension[] = [
                 description: 'Rename files with patterns, prefixes, and sequences',
                 href: '/extensions/batch-rename',
                 icon: <TextCursorInput className="size-5" />,
-                disabled: true,
             },
         ],
     },
@@ -189,7 +188,7 @@ export function NavigationSecondary() {
         if (getFavorites().length > 0) initial.add('Favorites')
         if (pathname.startsWith('/extensions/website')) initial.add('Web')
         else if (pathname.startsWith('/extensions/pdf')) initial.add('PDF')
-        else if (pathname.startsWith('/extensions/bulk-converter') || pathname.startsWith('/extensions/batch-rename')) initial.add('Batch')
+        else if (pathname.startsWith('/extensions/bulk-converter') || pathname.startsWith('/extensions/batch-rename')) initial.add('Batch Operations')
         else if (pathname.startsWith('/extensions/image') || pathname.startsWith('/extensions/svg') || pathname.startsWith('/extensions/favicon') || pathname.startsWith('/extensions/palette')) initial.add('Image')
         return initial
     })
