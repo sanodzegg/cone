@@ -76,6 +76,137 @@ export function extractMeta(code: string): SvgMeta {
     }
 }
 
+// ── Element color picking ─────────────────────────────────────────────────────
+
+const SKIP_COLORS = new Set(['none', 'currentcolor', 'inherit', 'transparent', ''])
+
+function isColorable(value: string): boolean {
+    return !SKIP_COLORS.has(value.trim().toLowerCase())
+}
+
+// Walk all elements in depth-first order, assign an index to those with a
+// colorable fill or stroke attribute. Returns the index counter after walking.
+function walkColorable(el: Element, idx: { n: number }, fn: (el: Element, i: number, attr: string) => void) {
+    const fill = el.getAttribute('fill')
+    const stroke = el.getAttribute('stroke')
+    if (fill && isColorable(fill)) { fn(el, idx.n++, 'fill') }
+    else if (stroke && isColorable(stroke)) { fn(el, idx.n++, 'stroke') }
+    for (const child of Array.from(el.children)) {
+        walkColorable(child, idx, fn)
+    }
+}
+
+// Inject data-svg-idx on colorable elements so the preview DOM can be linked back.
+// If selectedIdx is provided, also bake the selection stroke onto that element.
+export function injectColorIdx(code: string, selectedIdx: number | null = null): string {
+    try {
+        const parser = new DOMParser()
+        const doc = parser.parseFromString(code, 'image/svg+xml')
+        const svgEl = doc.documentElement
+        if (svgEl.tagName === 'parsererror') return code
+        const idx = { n: 0 }
+        walkChildren(svgEl, idx, (el, i) => {
+            el.setAttribute('data-svg-idx', String(i))
+            if (i === selectedIdx) {
+                const outline = el.cloneNode(false) as Element
+                // Remove fill so only the stroke shows; clear style/visibility attrs that might hide it
+                outline.setAttribute('fill', 'none')
+                outline.setAttribute('stroke', '#a855f7')
+                outline.setAttribute('stroke-width', '6')
+                outline.setAttribute('vector-effect', 'non-scaling-stroke')
+                outline.removeAttribute('data-svg-idx')
+                outline.removeAttribute('style')
+                outline.removeAttribute('display')
+                outline.removeAttribute('visibility')
+                outline.removeAttribute('opacity')
+                // Wrap in a group: outline behind, original on top
+                const group = el.ownerDocument!.createElementNS('http://www.w3.org/2000/svg', 'g')
+                el.parentNode!.insertBefore(group, el)
+                group.appendChild(outline)
+                group.appendChild(el)
+            }
+        })
+        return new XMLSerializer().serializeToString(doc)
+    } catch {
+        return code
+    }
+}
+
+export interface ElementColorInfo {
+    color: string
+    attrName: 'fill' | 'stroke'
+}
+
+// Walk only children of the svg root (not the root itself)
+function walkChildren(svgEl: Element, idx: { n: number }, fn: (el: Element, i: number, attr: string) => void) {
+    for (const child of Array.from(svgEl.children)) {
+        walkColorable(child, idx, fn)
+    }
+}
+
+// Return the color + attribute for the nth colorable element
+export function getElementColor(code: string, idx: number): ElementColorInfo | null {
+    try {
+        const parser = new DOMParser()
+        const doc = parser.parseFromString(code, 'image/svg+xml')
+        const svgEl = doc.documentElement
+        if (svgEl.tagName === 'parsererror') return null
+        let result: ElementColorInfo | null = null
+        const counter = { n: 0 }
+        walkChildren(svgEl, counter, (el, i, attr) => {
+            if (i === idx) {
+                const color = el.getAttribute(attr) ?? ''
+                result = { color, attrName: attr as 'fill' | 'stroke' }
+            }
+        })
+        return result
+    } catch {
+        return null
+    }
+}
+
+// Patch the nth colorable element's color and return the new SVG source.
+// Uses targeted string replacement to preserve the original formatting.
+export function patchElementColor(code: string, idx: number, newColor: string): string {
+    try {
+        const parser = new DOMParser()
+        const doc = parser.parseFromString(code, 'image/svg+xml')
+        const svgEl = doc.documentElement
+        if (svgEl.tagName === 'parsererror') return code
+
+        let oldColor = ''
+        let attrName = ''
+        const counter = { n: 0 }
+        walkChildren(svgEl, counter, (el, i, attr) => {
+            if (i === idx) {
+                oldColor = el.getAttribute(attr) ?? ''
+                attrName = attr
+            }
+        })
+        if (!attrName || !oldColor) return code
+
+        // Match both double- and single-quoted attribute values, not preceded by word/hyphen chars
+        const pattern = new RegExp(`(?<![\\w-])(${attrName}=)(["'])${escapeRegex(oldColor)}\\2`, 'g')
+        let occurrence = 0
+        const preCounter = { n: 0 }
+        let targetOccurrence = 0
+        walkChildren(svgEl, preCounter, (el, i, attr) => {
+            const val = el.getAttribute(attr) ?? ''
+            if (i < idx && attr === attrName && val === oldColor) targetOccurrence++
+        })
+        return code.replace(pattern, (_match, attrPart, quote) => {
+            if (occurrence++ === targetOccurrence) return `${attrPart}${quote}${newColor}${quote}`
+            return _match
+        })
+    } catch {
+        return code
+    }
+}
+
+function escapeRegex(s: string): string {
+    return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
 // ── Byte size display ─────────────────────────────────────────────────────────
 
 export function byteSize(str: string): string {

@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, lazy } from 'react'
+import { useState, useMemo, useEffect, useCallback, lazy } from 'react'
 import { RotateCcw, Check, Copy, Download } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Combobox, ComboboxInput, ComboboxContent, ComboboxList, ComboboxItem } from '@/components/ui/combobox'
@@ -8,7 +8,9 @@ import {
     optimizeSvg, prettifySvg, extractMeta,
     toBase64Uri, toEncodedUri, toMinifiedUri,
     byteSize, toCodeSnippet, CODE_FORMAT_OPTIONS, type CodeFormat,
+    injectColorIdx, getElementColor, patchElementColor,
 } from '@/components/svg-editor/svg-utils'
+import { ColorPicker } from '@/components/ui/color-picker'
 
 const SvgCodeEditor = lazy(() => import('@/components/svg-editor/SvgCodeEditor').then(m => ({ default: m.SvgCodeEditor })))
 
@@ -21,8 +23,9 @@ const BG_OPTIONS = [
     { label: 'Gray', value: 'gray', class: 'bg-zinc-800' },
 ]
 
-function preparePreview(code: string): string {
-    return code
+function preparePreview(code: string, selectedIdx: number | null = null): string {
+    const indexed = injectColorIdx(code, selectedIdx)
+    return indexed
         .replace(/<\?xml[\s\S]*?\?>\s*/gi, '')
         .replace(/<!--[\s\S]*?-->\s*/g, '')
         .replace(/<svg([\s\S]*?)>/i, (_, attrs) => {
@@ -84,8 +87,10 @@ export default function SvgEditor() {
     const [savings, setSavings] = useState(0)
     const [displayCode, setDisplayCode] = useState('')
     const [minifiedUri, setMinifiedUri] = useState('')
+    const [selectedColorIdx, setSelectedColorIdx] = useState<number | null>(null)
 
     const activeCode = code ?? ''
+
 
     useEffect(() => {
         if (!code) { setOptimizedCode(''); setSavings(0); return }
@@ -106,10 +111,80 @@ export default function SvgEditor() {
         toMinifiedUri(activeCode).then(setMinifiedUri)
     }, [activeCode, tab])
 
-    const previewHtml = useMemo(() => preparePreview(activeCode), [activeCode])
+    // Deselect when tab switches away from preview
+    useEffect(() => {
+        if (tab !== 'preview') setSelectedColorIdx(null)
+    }, [tab])
+
+    // Deselect when clicking outside the preview+picker area
+    useEffect(() => {
+        if (selectedColorIdx === null) return
+        function handlePointerDown(e: PointerEvent) {
+            const target = e.target as Element
+            // Allow clicks inside the color picker popover (portalled to body)
+            if (target.closest('.svg-color-pick') || target.closest('[data-color-picker]')) return
+            setSelectedColorIdx(null)
+        }
+        document.addEventListener('pointerdown', handlePointerDown)
+        return () => document.removeEventListener('pointerdown', handlePointerDown)
+    }, [selectedColorIdx])
+
+    const previewHtml = useMemo(() => preparePreview(activeCode, selectedColorIdx), [activeCode, selectedColorIdx])
     const bgClass = BG_OPTIONS.find(b => b.value === bg)?.class ?? 'bg-white'
     const meta = useMemo(() => extractMeta(activeCode), [activeCode])
     const fileSize = useMemo(() => byteSize(activeCode), [activeCode])
+
+    // Deselect element when code changes externally (e.g. Optimize, Prettify)
+    // but not when we ourselves just patched a color — handled in handleColorChange
+    const selectedColorInfo = selectedColorIdx !== null
+        ? getElementColor(activeCode, selectedColorIdx)
+        : null
+
+    // Normalize any CSS color (named, rgb(), etc.) to #rrggbb hex for the ColorPicker
+    const rawPickerColor = selectedColorInfo?.color ?? null
+    const pickerColor = useMemo(() => {
+        if (!rawPickerColor) return '#000000ff'
+        if (/^#[0-9a-fA-F]{6}$/.test(rawPickerColor)) return rawPickerColor + 'ff'
+        if (/^#[0-9a-fA-F]{8}$/.test(rawPickerColor)) return rawPickerColor
+        // Use canvas to resolve named/rgb colors
+        try {
+            const canvas = document.createElement('canvas')
+            canvas.width = canvas.height = 1
+            const ctx = canvas.getContext('2d')!
+            ctx.fillStyle = rawPickerColor
+            ctx.fillRect(0, 0, 1, 1)
+            const [r, g, b] = ctx.getImageData(0, 0, 1, 1).data
+            return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}ff`
+        } catch {
+            return '#000000ff'
+        }
+    }, [rawPickerColor])
+
+
+    const handlePreviewClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+        let target = e.target as Element | null
+        // Walk up to find the nearest element with data-svg-idx
+        while (target && target !== e.currentTarget) {
+            const idx = target.getAttribute('data-svg-idx')
+            if (idx !== null) {
+                setSelectedColorIdx(Number(idx))
+                return
+            }
+            target = target.parentElement
+        }
+        // Clicked on background — deselect
+        setSelectedColorIdx(null)
+    }, [])
+
+    const handleColorChange = useCallback((newColor: string) => {
+        if (selectedColorIdx === null || !code) return
+        setCode(patchElementColor(code, selectedColorIdx, newColor))
+    }, [selectedColorIdx, code])
+
+    const loadCode = useCallback((newCode: string) => {
+        setCode(newCode)
+        setSelectedColorIdx(null)
+    }, [])
 
     if (!code) {
         return (
@@ -120,7 +195,7 @@ export default function SvgEditor() {
                         Upload or paste an SVG to preview, export code snippets, and generate Data URIs.
                     </p>
                 </div>
-                <SvgDropzone onSvg={setCode} />
+                <SvgDropzone onSvg={loadCode} />
             </section>
         )
     }
@@ -220,14 +295,22 @@ export default function SvgEditor() {
                                         </span>
                                     )}
                                 </div>
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-2" data-color-picker>
+                                    {selectedColorInfo && (
+                                        <div className='h-7'>
+                                            <ColorPicker
+                                                value={pickerColor}
+                                                onChange={c => handleColorChange(c.slice(0, 7))}
+                                            />
+                                        </div>
+                                    )}
                                     {BG_OPTIONS.map(opt => (
                                         <button
                                             key={opt.value}
                                             title={opt.label}
                                             onClick={() => setBg(opt.value)}
                                             className={cn(
-                                                'h-6 w-6 rounded-md border-2 transition-colors',
+                                                'h-7 w-7 rounded-md border-2 transition-colors',
                                                 opt.class,
                                                 bg === opt.value ? 'border-primary' : 'border-border'
                                             )}
@@ -235,9 +318,16 @@ export default function SvgEditor() {
                                     ))}
                                 </div>
                             </div>
-                            <div className={cn('flex-1 rounded-xl relative flex items-center justify-center overflow-hidden', bgClass)}>
+                            <div
+                                className={cn('flex-1 rounded-xl relative flex items-center justify-center overflow-hidden', bgClass)}
+                                onPointerDown={e => {
+                                    // Deselect if clicking the background (not an svg element)
+                                    if (e.target === e.currentTarget) setSelectedColorIdx(null)
+                                }}
+                            >
                                 <div
-                                    className="svg-preview flex items-center justify-center w-full h-full"
+                                    className="svg-preview flex items-center justify-center w-full h-full svg-color-pick"
+                                    onClick={handlePreviewClick}
                                     dangerouslySetInnerHTML={{ __html: previewHtml }}
                                 />
                             </div>

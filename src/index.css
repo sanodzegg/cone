@@ -209,6 +209,21 @@
     height: auto;
     overflow: visible;
   }
+
+  /* Color-pick mode: pointer on colorable elements, highlight on hover/selected */
+  .svg-color-pick [data-svg-idx] {
+    cursor: pointer;
+    transition: opacity 0.1s;
+  }
+  .svg-color-pick [data-svg-idx]:hover {
+    opacity: 0.75;
+    outline: 1.5px dashed oklch(0.78 0.14 300 / 70%);
+    outline-offset: 1px;
+  }
+  .svg-color-pick .svg-selected {
+    outline: 2px solid #a855f7;
+    outline-offset: 2px;
+  }
 }
 
 @property --button-angle {

@@ -110,6 +110,8 @@ export function SvgCodeEditor({ value, onChange, readOnly = false }: Props) {
         isProgrammatic.current = true
         view.dispatch({
             changes: { from: 0, to: current.length, insert: value },
+            selection: view.state.selection,
+            scrollIntoView: false,
         })
         isProgrammatic.current = false
     }, [value])

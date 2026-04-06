@@ -116,6 +116,7 @@ export function ColorPicker({ value, onChange, className }: ColorPickerProps) {
                 <div
                     ref={popoverRef}
                     className="fixed z-9999 w-56 rounded-xl border border-border bg-popover shadow-lg p-3 flex flex-col gap-3"
+                    data-color-picker
                     style={{ top: pos.top, left: pos.left }}
                 >
                     <HexAlphaColorPicker
