@@ -29,7 +29,7 @@ export default function Homepage() {
       </div>
       <Dropbox />
 
-      <div className="mt-4 2xl:mt-5 flex items-center gap-3 px-4 2xl:px-5 py-3 2xl:py-3.5 rounded-2xl border border-accent bg-secondary/30">
+      <div className="mt-4 h-14.5 2xl:mt-5 flex items-center gap-3 px-4 2xl:px-5 py-3 2xl:py-3.5 rounded-2xl border border-accent bg-secondary/30">
         <button
           role="checkbox"
           aria-checked={autoDownloadEnabled}

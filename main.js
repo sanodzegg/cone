@@ -32,6 +32,8 @@ function createWindow() {
     backgroundMaterial: 'acrylic'
   })
 
+  mainWindow.on('closed', () => { mainWindow = null })
+
   if (isDev) {
     mainWindow.loadURL('http://localhost:5173')
   } else {
@@ -62,7 +64,7 @@ app.on('window-all-closed', () => {
 })
 
 app.on('activate', () => {
-  if (mainWindow) {
+  if (mainWindow && !mainWindow.isDestroyed()) {
     mainWindow.show()
     mainWindow.focus()
   } else {
