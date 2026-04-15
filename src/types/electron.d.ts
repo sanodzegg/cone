@@ -74,5 +74,17 @@ declare interface Window {
 
     // Tray / notifications
     showNotification: (title: string, body: string) => void
+
+    // Lighthouse
+    lighthouseStatus: () => Promise<{ installed: boolean; version: string | null }>
+    lighthouseInstall: () => Promise<{ success: boolean; version?: string; error?: string }>
+    lighthouseRun: (opts: { url: string; strategy?: 'desktop' | 'mobile' }) => Promise<{
+      success: boolean
+      error?: string
+      scores?: { performance: number; accessibility: number; bestPractices: number; seo: number }
+      webVitals?: { lcp: string | null; fcp: string | null; cls: string | null; tbt: string | null; si: string | null }
+      topIssues?: { id: string; title: string; score: number | null; displayValue: string | null }[]
+    }>
+    onLighthouseInstallProgress: (cb: (data: { status: 'progress' | 'done' | 'error'; pct?: number; version?: string; error?: string }) => void) => () => void
   }
 }

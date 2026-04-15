@@ -1,6 +1,6 @@
 {
   "name": "cone",
-  "version": "1.6.0",
+  "version": "1.7.0",
   "description": "Local-first desktop app for file conversion and media tooling. Convert images, video, audio, and documents entirely on-device — no uploads, no cloud.",
   "main": "main.js",
   "scripts": {

@@ -49,6 +49,16 @@ contextBridge.exposeInMainWorld('electron', {
   batchRenamePreview: (opts) => ipcRenderer.invoke('batch-rename-preview', opts),
   batchRenameApply: (opts) => ipcRenderer.invoke('batch-rename-apply', opts),
 
+  // Lighthouse
+  lighthouseStatus: () => ipcRenderer.invoke('lighthouse-status'),
+  lighthouseInstall: () => ipcRenderer.invoke('lighthouse-install'),
+  lighthouseRun: (opts) => ipcRenderer.invoke('lighthouse-run', opts),
+  onLighthouseInstallProgress: (cb) => {
+    const handler = (_e, data) => cb(data)
+    ipcRenderer.on('lighthouse-install-progress', handler)
+    return () => ipcRenderer.removeListener('lighthouse-install-progress', handler)
+  },
+
   // Tray / notifications
   showNotification: (title, body) => ipcRenderer.send('show-notification', { title, body }),
 
