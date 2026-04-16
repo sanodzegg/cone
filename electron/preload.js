@@ -51,6 +51,7 @@ contextBridge.exposeInMainWorld('electron', {
 
   // Lighthouse
   lighthouseStatus: () => ipcRenderer.invoke('lighthouse-status'),
+  lighthouseCheckUpdate: () => ipcRenderer.invoke('lighthouse-check-update'),
   lighthouseInstall: () => ipcRenderer.invoke('lighthouse-install'),
   lighthouseRun: (opts) => ipcRenderer.invoke('lighthouse-run', opts),
   onLighthouseInstallProgress: (cb) => {

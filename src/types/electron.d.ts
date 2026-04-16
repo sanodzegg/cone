@@ -77,6 +77,7 @@ declare interface Window {
 
     // Lighthouse
     lighthouseStatus: () => Promise<{ installed: boolean; version: string | null }>
+    lighthouseCheckUpdate: () => Promise<{ latestVersion: string | null }>
     lighthouseInstall: () => Promise<{ success: boolean; version?: string; error?: string }>
     lighthouseRun: (opts: { url: string; strategy?: 'desktop' | 'mobile' }) => Promise<{
       success: boolean

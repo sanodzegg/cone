@@ -598,18 +598,42 @@ export default function Lighthouse() {
   const [results, setResults] = useState<Results>({ desktop: null, mobile: null })
   const [isOnline, setIsOnline] = useState(navigator.onLine)
   const [showHistory, setShowHistory] = useState(false)
+  const [latestVersion, setLatestVersion] = useState<string | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
-    window.electron.lighthouseStatus().then(setStatus)
+    window.electron.lighthouseStatus().then(s => {
+      setStatus(s)
+      if (s.installed && s.version) {
+        const CACHE_KEY = 'cone_lighthouse_update_cache'
+        const TTL = 24 * 60 * 60 * 1000
+        try {
+          const cached = JSON.parse(localStorage.getItem(CACHE_KEY) ?? '{}')
+          if (cached.latestVersion && Date.now() - (cached.ts ?? 0) < TTL) {
+            if (cached.latestVersion !== s.version) setLatestVersion(cached.latestVersion)
+            return
+          }
+        } catch {}
+        window.electron.lighthouseCheckUpdate().then(({ latestVersion: lv }) => {
+          if (lv) {
+            localStorage.setItem(CACHE_KEY, JSON.stringify({ latestVersion: lv, ts: Date.now() }))
+            if (lv !== s.version) setLatestVersion(lv)
+          }
+        })
+      }
+    })
     const unsub = window.electron.onLighthouseInstallProgress((data) => {
       if (data.status === 'progress') {
         setInstallPct(data.pct ?? 0)
       } else if (data.status === 'done') {
         setInstallPct(100)
+        if (data.version) {
+          localStorage.setItem('cone_lighthouse_update_cache', JSON.stringify({ latestVersion: data.version, ts: Date.now() }))
+        }
         setTimeout(() => {
           setInstalling(false)
           setInstallPct(0)
+          setLatestVersion(null)
           setStatus({ installed: true, version: data.version ?? null })
         }, 600)
       } else if (data.status === 'error') {
@@ -730,6 +754,40 @@ export default function Lighthouse() {
   return (
     <section className="section py-8">
       <PageHeader version={status?.version} />
+
+      {/* Update banner */}
+      {(latestVersion || (installing && status?.installed)) && (
+        <div className="flex items-center gap-3 rounded-lg border border-yellow-500/30 bg-yellow-500/8 px-4 py-2.5 mb-4">
+          {installing ? (
+            <Loader2 className="size-4 text-yellow-500 shrink-0 animate-spin" />
+          ) : (
+            <TrendingUp className="size-4 text-yellow-500 shrink-0" />
+          )}
+          <div className="flex-1 flex flex-col gap-1.5">
+            {installing ? (
+              <>
+                <p className="text-sm text-foreground">Updating Lighthouse… {installPct}%</p>
+                <div className="h-1 rounded-full bg-yellow-500/20 overflow-hidden">
+                  <div className="h-full rounded-full bg-yellow-500 transition-all duration-300" style={{ width: `${installPct}%` }} />
+                </div>
+              </>
+            ) : (
+              <p className="text-sm text-foreground">
+                Lighthouse <span className="font-medium text-yellow-500">{latestVersion}</span> is available
+                <span className="text-muted-foreground ml-1.5">(installed: {status?.version})</span>
+              </p>
+            )}
+          </div>
+          {!installing && (
+            <button
+              onClick={() => { localStorage.removeItem('cone_lighthouse_update_cache'); install() }}
+              className="text-xs font-medium text-yellow-500 hover:text-yellow-400 cursor-pointer transition-colors shrink-0"
+            >
+              Update now
+            </button>
+          )}
+        </div>
+      )}
 
       {/* URL input */}
       <div className="flex gap-3 mb-2">

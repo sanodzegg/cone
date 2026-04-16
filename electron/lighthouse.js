@@ -2,6 +2,7 @@ const { ipcMain, app } = require('electron')
 const path = require('path')
 const fs = require('fs')
 const { execFile, spawn } = require('child_process') // execFile used for lighthouse-run
+const https = require('https')
 
 const LIGHTHOUSE_DIR = path.join(app.getPath('userData'), 'lighthouse-cli')
 const LIGHTHOUSE_BIN = path.join(LIGHTHOUSE_DIR, 'node_modules', '.bin', 'lighthouse')
@@ -25,6 +26,25 @@ function registerLighthouseHandlers(mainWindow) {
     return { installed: isInstalled(), version: getVersion() }
   })
 
+  ipcMain.handle('lighthouse-check-update', () => {
+    return new Promise((resolve) => {
+      const req = https.get('https://registry.npmjs.org/lighthouse/latest', { headers: { 'User-Agent': 'cone-app' } }, (res) => {
+        let data = ''
+        res.on('data', chunk => { data += chunk })
+        res.on('end', () => {
+          try {
+            const { version } = JSON.parse(data)
+            resolve({ latestVersion: version })
+          } catch {
+            resolve({ latestVersion: null })
+          }
+        })
+      })
+      req.on('error', () => resolve({ latestVersion: null }))
+      req.setTimeout(8000, () => { req.destroy(); resolve({ latestVersion: null }) })
+    })
+  })
+
   ipcMain.handle('lighthouse-install', async () => {
     return new Promise((resolve) => {
       fs.mkdirSync(LIGHTHOUSE_DIR, { recursive: true })
@@ -35,7 +55,7 @@ function registerLighthouseHandlers(mainWindow) {
       }
 
       const npm = process.platform === 'win32' ? 'npm.cmd' : 'npm'
-      const child = spawn(npm, ['install', 'lighthouse', '--save-exact'], { cwd: LIGHTHOUSE_DIR })
+      const child = spawn(npm, ['install', 'lighthouse@latest', '--save-exact'], { cwd: LIGHTHOUSE_DIR })
 
       // npm prints one "added N packages" line at the end — we can't get real per-package
       // progress, so we simulate smooth fill by counting stderr dots and lines over time.
@@ -95,7 +115,7 @@ function registerLighthouseHandlers(mainWindow) {
         '--output=json',
         '--output-path=stdout',
         '--chrome-path=' + chromiumPath,
-        '--chrome-flags=--headless=new --no-sandbox --disable-gpu',
+        '--chrome-flags=--headless=new --no-sandbox --disable-gpu --disable-extensions',
         '--only-categories=performance,accessibility,best-practices,seo',
         '--quiet',
         '--no-enable-error-reporting',
