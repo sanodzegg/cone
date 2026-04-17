@@ -8,6 +8,7 @@ const { registerWebsitePdfHandlers } = require('./electron/website-pdf')
 const { registerFileSaveHandlers } = require('./electron/file-save')
 const { registerBatchRenameHandlers } = require('./electron/batch-rename')
 const { registerLighthouseHandlers } = require('./electron/lighthouse')
+const { registerPdfEditorHandlers } = require('./electron/pdf-editor')
 
 const isDev = !app.isPackaged
 
@@ -59,6 +60,7 @@ app.whenReady().then(() => {
   registerFileSaveHandlers(mainWindow)
   registerBatchRenameHandlers()
   registerLighthouseHandlers(mainWindow)
+  registerPdfEditorHandlers(mainWindow)
 })
 
 app.on('window-all-closed', () => {

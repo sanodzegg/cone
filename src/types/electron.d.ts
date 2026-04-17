@@ -72,6 +72,43 @@ declare interface Window {
     pickDownloadFolder: () => Promise<string | null>
     saveConvertedFile: (folderPath: string, fileName: string, buffer: ArrayBuffer) => Promise<string>
 
+    // PDF Editor
+    pdfEditorPickFile: () => Promise<{ canceled: true } | { canceled: false; path: string; name: string; size: number }>
+    pdfEditorReadFile: (filePath: string) => Promise<number[]>
+    pdfEditorPageOps: (opts: { filePath: string; ops: { srcIndex: number; rotation: number }[] }) => Promise<{ success: boolean; pageCount?: number; error?: string }>
+    pdfEditorSave: () => Promise<{ canceled: boolean; filePath?: string }>
+    pdfEditorReset: () => Promise<{ ok: boolean }>
+    pdfEditorWatermark: (opts: {
+      filePath: string
+      watermark: {
+        type: 'text' | 'image'
+        text?: string
+        color?: string
+        fontSize?: number
+        opacity?: number
+        rotation?: number
+        imageBytes?: number[]
+        scale?: number
+        pages: 'all' | number[]
+      }
+    }) => Promise<{ success: boolean; error?: string }>
+    pdfEditorGetFormFields: (filePath: string) => Promise<{ success: boolean; error?: string; fields: { name: string; type: string; value: string | null }[] }>
+    pdfEditorFillForms: (opts: { filePath: string; fields: { name: string; type: string; value: string }[] }) => Promise<{ success: boolean; error?: string }>
+    pdfEditorBurnAnnotations: (opts: {
+      filePath: string
+      pages: {
+        pageNum: number
+        width: number
+        height: number
+        annotations: Array<
+          | { kind: 'highlight'; id: string; x: number; y: number; w: number; h: number; color: string; opacity: number }
+          | { kind: 'text'; id: string; x: number; y: number; text: string; color: string; fontSize: number }
+          | { kind: 'draw'; id: string; points: { x: number; y: number }[]; color: string; strokeWidth: number }
+          | { kind: 'arrow'; id: string; x1: number; y1: number; x2: number; y2: number; color: string; strokeWidth: number }
+        >
+      }[]
+    }) => Promise<{ success: boolean; error?: string }>
+
     // Tray / notifications
     showNotification: (title: string, body: string) => void
 

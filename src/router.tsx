@@ -17,6 +17,7 @@ const BatchRename = lazy(() => import('./pages/batch-rename'))
 const PaletteExtractor = lazy(() => import('./pages/palette-extractor'))
 const ImageCompression = lazy(() => import('./pages/image-compression'))
 const Lighthouse = lazy(() => import('./pages/lighthouse'))
+const PdfEditor = lazy(() => import('./pages/pdf-editor'))
 
 function ProRoute({ children }: { children: React.ReactNode }) {
   const { plan } = useAuth()
@@ -41,6 +42,7 @@ export default function Router() {
           <Route path="/extensions/website-screenshot" element={<ProRoute><WebsiteScreenshot /></ProRoute>} />
           <Route path="/extensions/website-pdf" element={<ProRoute><WebsitePdf /></ProRoute>} />
           <Route path="/extensions/lighthouse" element={<ProRoute><Lighthouse /></ProRoute>} />
+          <Route path="/extensions/pdf-editor" element={<PdfEditor />} />
           <Route path="/account" element={<Auth />} />
           <Route path="/pricing" element={<Pricing />} />
       </Routes>

@@ -10,7 +10,7 @@ import {
     SheetTrigger,
 } from "../ui/sheet";
 import { cn } from "@/lib/utils";
-import { Camera, ChevronRight, Crop, Download, FileDown, FilePlus, FolderInput, FolderSync, Gauge, Globe, ImageIcon, LayoutGrid, Lock, PenLine, Pipette, Star, Tag, TextCursorInput, User, WifiOff, Zap } from "lucide-react";
+import { Camera, ChevronRight, Crop, Download, FileDown, FileEdit, FilePlus, FolderInput, FolderSync, Gauge, Globe, ImageIcon, LayoutGrid, Lock, PenLine, Pipette, Star, Tag, TextCursorInput, User, WifiOff, Zap } from "lucide-react";
 import { useAuth } from "@/lib/useAuth";
 import { PRICING_DISMISSED_KEY } from "./navigation";
 
@@ -218,6 +218,12 @@ const extensions: Extension[] = [
         title: 'PDF',
         icon: <FileDown className="size-5" />,
         children: [
+            {
+                title: 'PDF Editor',
+                description: 'Reorder, rotate, annotate and watermark PDF pages',
+                href: '/extensions/pdf-editor',
+                icon: <FileEdit className="size-5" />,
+            },
             {
                 title: 'Merge',
                 description: 'Combine multiple PDFs into one',

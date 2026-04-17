@@ -60,6 +60,17 @@ contextBridge.exposeInMainWorld('electron', {
     return () => ipcRenderer.removeListener('lighthouse-install-progress', handler)
   },
 
+  // PDF Editor
+  pdfEditorPickFile: () => ipcRenderer.invoke('pdf-editor-pick-file'),
+  pdfEditorReadFile: (filePath) => ipcRenderer.invoke('pdf-editor-read-file', filePath),
+  pdfEditorPageOps: (opts) => ipcRenderer.invoke('pdf-editor-page-ops', opts),
+  pdfEditorSave: () => ipcRenderer.invoke('pdf-editor-save'),
+  pdfEditorReset: () => ipcRenderer.invoke('pdf-editor-reset'),
+  pdfEditorWatermark: (opts) => ipcRenderer.invoke('pdf-editor-watermark', opts),
+  pdfEditorGetFormFields: (filePath) => ipcRenderer.invoke('pdf-editor-get-form-fields', filePath),
+  pdfEditorFillForms: (opts) => ipcRenderer.invoke('pdf-editor-fill-forms', opts),
+  pdfEditorBurnAnnotations: (opts) => ipcRenderer.invoke('pdf-editor-burn-annotations', opts),
+
   // Tray / notifications
   showNotification: (title, body) => ipcRenderer.send('show-notification', { title, body }),
 
