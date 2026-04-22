@@ -74,6 +74,14 @@ contextBridge.exposeInMainWorld('electron', {
   // Tray / notifications
   showNotification: (title, body) => ipcRenderer.send('show-notification', { title, body }),
 
+  // OAuth
+  openExternal: (url) => ipcRenderer.invoke('open-external', url),
+  onOAuthCallback: (cb) => {
+    const handler = (_e, url) => cb(url)
+    ipcRenderer.on('oauth-callback', handler)
+    return () => ipcRenderer.removeListener('oauth-callback', handler)
+  },
+
   // Website screenshot
   screenshotEnsureBrowser: () => ipcRenderer.invoke('screenshot-ensure-browser'),
   screenshotCapture: (opts) => ipcRenderer.invoke('screenshot-capture', opts),

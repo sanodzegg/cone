@@ -2,8 +2,7 @@ import { TRIAL_LIMITS, LIMITED_DAILY_LIMITS, getDailyCounts } from '@/lib/useCon
 import type { ConversionCounts } from '@/lib/useConversionCount'
 import type { Plan } from '@/lib/useAuth'
 import { cn } from '@/lib/utils'
-import { Button } from '@/components/ui/button'
-import { useNavigate } from 'react-router-dom'
+import { Image, FileText, Video, Music } from 'lucide-react'
 
 function UsageBar({ used, limit }: { used: number; limit: number }) {
     const pct = Math.min((used / limit) * 100, 100)
@@ -19,13 +18,19 @@ function UsageBar({ used, limit }: { used: number; limit: number }) {
     )
 }
 
+const ROW_ICONS = {
+    Images: Image,
+    Documents: FileText,
+    Videos: Video,
+    Audio: Music,
+}
+
 interface UsageCardProps {
     plan: Plan
     counts: ConversionCounts
 }
 
 export function UsageCard({ plan, counts }: UsageCardProps) {
-    const navigate = useNavigate()
     const isFreeplan = plan === 'trial' || plan === 'limited'
     const daily = getDailyCounts()
 
@@ -44,35 +49,50 @@ export function UsageCard({ plan, counts }: UsageCardProps) {
             : { label: 'Audio', used: counts.audio, limit: TRIAL_LIMITS.audio, isDaily: false },
     ] : []
 
+    const totalStats = [
+        { label: 'Images', value: counts.image, icon: Image },
+        { label: 'Documents', value: counts.document, icon: FileText },
+        { label: 'Videos', value: counts.video, icon: Video },
+        { label: 'Audio', value: counts.audio, icon: Music },
+    ]
+
     return (
         <div className="rounded-2xl border border-border p-5 space-y-3">
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Usage</p>
+            <p className="text-sm font-medium text-muted-foreground uppercase tracking-wide">Usage</p>
             {isFreeplan ? (
-                <div className="space-y-4">
-                    <div className="space-y-3">
-                        {rows.map(({ label, used, limit, isDaily }) => (
+                <div className="space-y-3">
+                    {rows.map(({ label, used, limit, isDaily }) => {
+                        const Icon = ROW_ICONS[label as keyof typeof ROW_ICONS]
+                        return (
                             <div key={label} className="space-y-1">
                                 <div className="flex items-center justify-between">
-                                    <p className="text-xs text-muted-foreground">{label}</p>
-                                    <p className="text-xs text-foreground">
+                                    <p className="text-sm text-muted-foreground flex items-center gap-1.5">
+                                        <Icon className="size-4" />
+                                        {label}
+                                    </p>
+                                    <p className="text-sm text-foreground tabular-nums">
                                         {used} / {limit}
                                         {isDaily && <span className="text-muted-foreground"> today</span>}
                                     </p>
                                 </div>
                                 <UsageBar used={used} limit={limit} />
                             </div>
-                        ))}
-                    </div>
-                    <Button variant="default" className="w-fit" onClick={() => navigate('/pricing')}>
-                        Upgrade to Pro or Lifetime
-                    </Button>
+                        )
+                    })}
                 </div>
             ) : (
-                <div className="space-y-1">
-                    <p className="text-sm text-foreground font-medium">Unlimited</p>
-                    <p className="text-xs text-muted-foreground">
-                        Images: {counts.image} &middot; Documents: {counts.document} &middot; Videos: {counts.video}
-                    </p>
+                <div className="grid grid-cols-2 gap-3">
+                    {totalStats.map(({ label, value, icon: Icon }) => (
+                        <div key={label} className="flex items-center gap-2.5">
+                            <div className="size-9 rounded-lg bg-foreground/5 flex items-center justify-center shrink-0">
+                                <Icon className="size-4 text-muted-foreground" />
+                            </div>
+                            <div>
+                                <p className="text-base font-medium text-foreground tabular-nums">{value.toLocaleString()}</p>
+                                <p className="text-sm text-muted-foreground">{label}</p>
+                            </div>
+                        </div>
+                    ))}
                 </div>
             )}
         </div>

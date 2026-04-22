@@ -20,6 +20,7 @@ export interface PricingCardProps {
     interval?: Interval
     onIntervalChange?: (interval: Interval) => void
     badge?: Badge
+    disabled?: boolean
 }
 
 const BADGE_CONFIG: Record<Badge, { label: string; className: string }> = {
@@ -40,13 +41,14 @@ export function PricingCard({
     interval,
     onIntervalChange,
     badge,
+    disabled,
 }: PricingCardProps) {
     const displayPrice = typeof price === 'object'
         ? (interval === 'monthly' ? price.monthly : price.annual)
         : price
 
     return (
-        <Card className={cn("relative border-border backdrop-blur-xl flex flex-col bg-muted/50 dark:bg-black/30 dark:border-white/20", title === 'Pro' ? "h-full" : "h-[calc(100%-40px)]")}>
+        <Card className={cn("relative border-border backdrop-blur-xl flex flex-col bg-muted/50 dark:bg-black/30 dark:border-white/20", title === 'Pro' ? "h-full" : "h-full")}>
             <div className="pointer-events-none absolute inset-0 rounded-2xl overflow-hidden bg-linear-to-br from-foreground/10 to-transparent" />
 
             {badge && badge !== 'current' && (
@@ -135,8 +137,8 @@ export function PricingCard({
             </CardContent>
 
             <CardFooter className="relative mt-auto">
-                <Button variant={ctaVariant} className="w-full h-10 2xl:h-11 2xl:text-base" disabled={badge === 'current'}>
-                    {badge === 'current' ? 'Current Plan' : ctaLabel}
+                <Button variant={ctaVariant} className="w-full h-10 2xl:h-11 2xl:text-base" disabled={badge === 'current' || disabled}>
+                    {badge === 'current' ? 'Current Plan' : interval ? `${ctaLabel} (${interval === 'monthly' ? 'Monthly' : 'Annual'})` : ctaLabel}
                 </Button>
             </CardFooter>
         </Card>

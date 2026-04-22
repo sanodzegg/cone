@@ -20,7 +20,8 @@ const PLANS = [
             '200 image conversions',
             '150 document conversions',
             '50 video conversions',
-            'Image editor',
+            'All output formats included',
+            'Image editor & canvas tools',
             'Favicon generator',
             'SVG editor',
         ],
@@ -35,10 +36,10 @@ const PLANS = [
         price: 0,
         features: [
             '20 image conversions / day',
-            '20 document conversions / day',
-            '10 video conversions / day',
+            '15 document conversions / day',
+            '5 video conversions / day',
             'Resets every 24 hours',
-            'Image editor',
+            'Image editor & canvas tools',
             'Favicon generator',
             'SVG editor',
         ],
@@ -53,11 +54,11 @@ const PLANS = [
         price: { monthly: 4.99, annual: 3.99 },
         priceSuffix: '/mo',
         features: [
-            'Unlimited conversions',
-            'Bulk converter + watch folder mode',
-            'Image editor',
-            'Favicon generator',
-            'SVG editor',
+            'Unlimited conversions — no caps',
+            'Bulk convert entire folders at once',
+            'Watch folder, auto-convert on save',
+            'Image editor & canvas tools',
+            'Favicon generator & SVG editor',
             'Settings sync across devices',
             'Priority support',
         ],
@@ -72,9 +73,9 @@ const PLANS = [
         price: 49,
         features: [
             'Everything in Pro, forever',
-            'One-time payment — no renewals',
-            'Offline license key, works without internet',
+            'One-time payment, no renewals',
             'All future updates included',
+            'Works fully offline',
         ],
         ctaLabel: 'Get Lifetime',
         ctaVariant: 'outline' as const,
@@ -86,7 +87,7 @@ export default function Pricing() {
     const { plan } = useAuth()
     const [interval, setInterval] = useState<Interval>('annual')
     const [videoReady, setVideoReady] = useState(false)
-    const trialExhausted = plan === 'limited' || (plan === 'trial' && isTrialExhausted())
+    const showLimited = plan === 'limited' || (plan === 'trial' && isTrialExhausted())
 
     const pricingBg = theme === 'dark' ? pricingBgDark : pricingBgLight
 
@@ -109,12 +110,14 @@ export default function Pricing() {
                     <p className="text-sm 2xl:text-base text-muted-foreground">No subscriptions required. Start free, upgrade when you need more.</p>
                 </div>
                 <div className="relative z-10 grid grid-cols-3 gap-4 2xl:gap-6 items-center">
-                    {PLANS.filter(p => trialExhausted ? p.id !== 'trial' : p.id !== 'limited').map(p => {
+                    {PLANS.filter(p => showLimited ? p.id !== 'trial' : p.id !== 'limited').map(p => {
                         const isCurrent =
-                            (p.id === 'limited' && trialExhausted) ||
-                            (p.id === 'trial' && plan === 'trial' && !trialExhausted) ||
-                            (p.id === 'pro' && (plan === 'monthly' || plan === 'annual')) ||
+                            (p.id === 'limited' && showLimited) ||
+                            (p.id === 'trial' && plan === 'trial' && !showLimited) ||
+                            (p.id === 'pro' && plan === interval) ||
                             (p.id === 'lifetime' && plan === 'lifetime')
+                        const isPaidUser = plan === 'monthly' || plan === 'annual' || plan === 'lifetime'
+                        const isFreeTier = p.id === 'trial' || p.id === 'limited'
                         const badge = isCurrent ? 'current' : p.id === 'pro' ? 'popular' : p.id === 'lifetime' ? 'best-value' : undefined
                         return (
                             <PricingCard
@@ -128,6 +131,7 @@ export default function Pricing() {
                                 ctaLabel={p.ctaLabel}
                                 ctaVariant={p.ctaVariant}
                                 badge={badge}
+                                disabled={isFreeTier && isPaidUser}
                                 {...(p.id === 'pro' && { interval, onIntervalChange: setInterval })}
                             />
                         )

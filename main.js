@@ -1,5 +1,14 @@
-const { app, BrowserWindow, ipcMain, Notification, screen } = require('electron')
+const { app, BrowserWindow, ipcMain, Notification, screen, shell } = require('electron')
 const path = require('path')
+
+// Register deep link protocol for OAuth callbacks
+if (process.defaultApp) {
+  if (process.argv.length >= 2) {
+    app.setAsDefaultProtocolClient('cone', process.execPath, [path.resolve(process.argv[1])])
+  }
+} else {
+  app.setAsDefaultProtocolClient('cone')
+}
 const { registerConvertHandlers } = require('./electron/convert')
 const { registerBulkConvertHandlers } = require('./electron/bulk-convert')
 const { registerScreenshotHandlers } = require('./electron/screenshot')
@@ -11,6 +20,9 @@ const { registerLighthouseHandlers } = require('./electron/lighthouse')
 const { registerPdfEditorHandlers } = require('./electron/pdf-editor')
 
 const isDev = !app.isPackaged
+
+const gotLock = app.requestSingleInstanceLock()
+if (!gotLock) app.quit()
 
 let mainWindow = null
 
@@ -47,6 +59,29 @@ function createWindow() {
 ipcMain.on('show-notification', (_e, { title, body }) => {
   if (Notification.isSupported()) {
     new Notification({ title, body, silent: false }).show()
+  }
+})
+
+ipcMain.handle('open-external', (_e, url) => {
+  shell.openExternal(url)
+})
+
+// Handle OAuth deep link callback (macOS)
+app.on('open-url', (event, url) => {
+  event.preventDefault()
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send('oauth-callback', url)
+    mainWindow.focus()
+  }
+})
+
+// Handle OAuth deep link callback (Windows — second instance)
+app.on('second-instance', (_event, argv) => {
+  const url = argv.find(arg => arg.startsWith('cone://'))
+  if (url && mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send('oauth-callback', url)
+    if (mainWindow.isMinimized()) mainWindow.restore()
+    mainWindow.focus()
   }
 })
 

@@ -112,6 +112,10 @@ declare interface Window {
     // Tray / notifications
     showNotification: (title: string, body: string) => void
 
+    // OAuth
+    openExternal: (url: string) => Promise<void>
+    onOAuthCallback: (cb: (url: string) => void) => () => void
+
     // Lighthouse
     lighthouseStatus: () => Promise<{ installed: boolean; version: string | null }>
     lighthouseCheckUpdate: () => Promise<{ latestVersion: string | null }>
