@@ -20,7 +20,7 @@ if (splash) splash.remove();
 function App() {
   const { user, plan, setPlan } = useAuthStore()
   const { conflictSettings, localAtConflict, applyRemote, keepLocal } = useSettingsSync(user)
-  const { syncCountToServer } = useConversionCount(user, plan)
+  const { syncCountToServer } = useConversionCount(user)
 
   function onConversionSuccess(engineId: string) {
     const type = toEngineType(engineId)

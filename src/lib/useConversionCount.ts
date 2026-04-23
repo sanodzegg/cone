@@ -72,13 +72,21 @@ export function getDailyCounts(): DailyCounts {
     return getDailyLocal()
 }
 
-// "Exhausted" means every category has hit its trial cap — at that point the user
-// is fully on daily buckets, which is what the 'limited' plan represents.
-// Partial caps keep the user on 'trial' so unexhausted categories still show
-// trial progress and tier-gated features stay available.
+// Each category contributes equally (25%) to the exhaustion score regardless of
+// absolute cap size. Score = average of per-category fill ratios. Flip to 'limited'
+// at 75% — roughly equivalent to 3 of 4 categories fully used, or an equivalent mix.
+// This prevents a document-avoider from staying on trial indefinitely while having
+// burned through every other category.
+const EXHAUSTION_THRESHOLD = 0.75
 export function isTrialExhausted(): boolean {
     const counts = getLocal()
-    return counts.image >= LIMITS.image && counts.document >= LIMITS.document && counts.video >= LIMITS.video && counts.audio >= LIMITS.audio
+    const score = (
+        Math.min(counts.image / LIMITS.image, 1) +
+        Math.min(counts.document / LIMITS.document, 1) +
+        Math.min(counts.video / LIMITS.video, 1) +
+        Math.min(counts.audio / LIMITS.audio, 1)
+    ) / 4
+    return score >= EXHAUSTION_THRESHOLD
 }
 
 function getLocal(): ConversionCounts {
@@ -98,8 +106,17 @@ function getLocal(): ConversionCounts {
 }
 
 function setLocal(counts: ConversionCounts) {
+    const prev = getLocal()
     localStorage.setItem(STORAGE_KEY, JSON.stringify(counts))
     useCountsStore.setState({ counts })
+    // If any category dropped back below its trial cap, its daily bucket is stale — clear it.
+    const categoryReverted = (
+        (prev.image >= LIMITS.image && counts.image < LIMITS.image) ||
+        (prev.document >= LIMITS.document && counts.document < LIMITS.document) ||
+        (prev.video >= LIMITS.video && counts.video < LIMITS.video) ||
+        (prev.audio >= LIMITS.audio && counts.audio < LIMITS.audio)
+    )
+    if (categoryReverted) localStorage.removeItem(DAILY_STORAGE_KEY)
     reconcilePlanWithCounts(counts)
 }
 
@@ -111,10 +128,15 @@ function setLocal(counts: ConversionCounts) {
 function reconcilePlanWithCounts(counts: ConversionCounts) {
     const store = useAuthStore.getState()
     if (store.plan !== 'limited') return
-    const notFullyExhausted = counts.image < LIMITS.image || counts.document < LIMITS.document
-        || counts.video < LIMITS.video || counts.audio < LIMITS.audio
-    if (!notFullyExhausted) return
-    localStorage.removeItem(DAILY_STORAGE_KEY)
+    const score = (
+        Math.min(counts.image / LIMITS.image, 1) +
+        Math.min(counts.document / LIMITS.document, 1) +
+        Math.min(counts.video / LIMITS.video, 1) +
+        Math.min(counts.audio / LIMITS.audio, 1)
+    ) / 4
+    if (score >= EXHAUSTION_THRESHOLD) return
+    // setPlan is synchronous — update store first so any subsequent setLocal calls
+    // within the same tick see plan = 'trial' and skip this branch entirely.
     store.setPlan('trial')
     const uid = store.user?.id
     if (uid) {
@@ -190,7 +212,7 @@ export function isAtLimit(engine: EngineType, plan: string): boolean {
     return daily[engine] >= DAILY_LIMITS[engine]
 }
 
-export function useConversionCount(user: User | null, plan: string) {
+export function useConversionCount(user: User | null) {
     const synced = useRef(false)
 
     useEffect(() => {
@@ -247,7 +269,7 @@ export function useConversionCount(user: User | null, plan: string) {
 
                 synced.current = true
             })
-    }, [user, plan])
+    }, [user])
 
     // Realtime sync: admin edits are applied verbatim; our own echoes are skipped via
     // the ownPushTimestamps guard so burst self-writes can't overwrite local state with
@@ -274,22 +296,28 @@ export function useConversionCount(user: User | null, plan: string) {
         return () => { supabase.removeChannel(channel) }
     }, [user])
 
-    // When online, sync local increments to server
+    // Debounced so burst conversions (e.g. Convert All on 20 files) collapse into a
+    // single upsert fired 800 ms after the last success, carrying the final counts.
+    const syncTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
     function syncCountToServer() {
         if (!user || !navigator.onLine) return
-        const counts = getLocal()
-        const ts = new Date().toISOString()
-        rememberPush(ts)
-        supabase.from('conversion_counts').upsert({
-            user_id: user.id,
-            image_count: counts.image,
-            document_count: counts.document,
-            video_count: counts.video,
-            audio_count: counts.audio,
-            updated_at: ts,
-        }, { onConflict: 'user_id' }).then(({ error }) => {
-            if (error) console.error('[conversionCount] sync error:', error)
-        })
+        if (syncTimerRef.current) clearTimeout(syncTimerRef.current)
+        syncTimerRef.current = setTimeout(() => {
+            syncTimerRef.current = null
+            const counts = getLocal()
+            const ts = new Date().toISOString()
+            rememberPush(ts)
+            supabase.from('conversion_counts').upsert({
+                user_id: user.id,
+                image_count: counts.image,
+                document_count: counts.document,
+                video_count: counts.video,
+                audio_count: counts.audio,
+                updated_at: ts,
+            }, { onConflict: 'user_id' }).then(({ error }) => {
+                if (error) console.error('[conversionCount] sync error:', error)
+            })
+        }, 800)
     }
 
     return { syncCountToServer }

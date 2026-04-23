@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Clock, Zap, Star, Timer } from 'lucide-react'
 import { PricingCard } from '@/components/pricing/pricing-card'
 import { useAuth } from '@/lib/useAuth'
-import { useCountsStore, TRIAL_LIMITS } from '@/lib/useConversionCount'
+import { isTrialExhausted } from '@/lib/useConversionCount'
 import pricingBgDark from '@/assets/pricing-bg.webm'
 import pricingBgLight from '@/assets/pricing-bg-light.webm'
 import { useTheme } from '@/components/theme/theme-provider'
@@ -102,9 +102,7 @@ export default function Pricing() {
     const { plan } = useAuth()
     const [interval, setInterval] = useState<Interval>('annual')
     const [videoReady, setVideoReady] = useState(false)
-    const counts = useCountsStore(s => s.counts)
-    const trialExhausted = counts.image >= TRIAL_LIMITS.image || counts.document >= TRIAL_LIMITS.document
-        || counts.video >= TRIAL_LIMITS.video || counts.audio >= TRIAL_LIMITS.audio
+    const trialExhausted = isTrialExhausted()
     const showLimited = plan === 'limited' || (plan === 'trial' && trialExhausted)
 
     const pricingBg = theme === 'dark' ? pricingBgDark : pricingBgLight
