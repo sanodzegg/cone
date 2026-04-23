@@ -72,9 +72,13 @@ export function getDailyCounts(): DailyCounts {
     return getDailyLocal()
 }
 
+// "Exhausted" means every category has hit its trial cap — at that point the user
+// is fully on daily buckets, which is what the 'limited' plan represents.
+// Partial caps keep the user on 'trial' so unexhausted categories still show
+// trial progress and tier-gated features stay available.
 export function isTrialExhausted(): boolean {
     const counts = getLocal()
-    return counts.image >= LIMITS.image || counts.document >= LIMITS.document || counts.video >= LIMITS.video || counts.audio >= LIMITS.audio
+    return counts.image >= LIMITS.image && counts.document >= LIMITS.document && counts.video >= LIMITS.video && counts.audio >= LIMITS.audio
 }
 
 function getLocal(): ConversionCounts {
@@ -103,15 +107,37 @@ export const useCountsStore = create<{ counts: ConversionCounts }>()(() => ({
     counts: getLocal(),
 }))
 
-export function incrementLocalCount(engine: EngineType) {
+// Returns a refund fn that reverses exactly what this increment did. Counts are
+// reserved at the start of a conversion so parallel attempts can't all pass the
+// same limit check; call the returned refund fn if the conversion ends up failing
+// so the user doesn't lose a slot.
+export function incrementLocalCount(engine: EngineType, plan: string): () => void {
     const counts = getLocal()
-    if (counts[engine] >= LIMITS[engine]) {
-        // Past trial limit — only track daily window, don't keep inflating the total
-        incrementDailyCount(engine)
-        return
+    const isPaid = plan === 'monthly' || plan === 'annual' || plan === 'lifetime'
+    // Free plans past trial cap: stop inflating the total and track the daily window instead.
+    // Paid plans: always increment — the total is just a lifetime counter, no gating logic.
+    if (!isPaid && counts[engine] >= LIMITS[engine]) {
+        const daily = getDailyLocal()
+        if (daily[engine] >= DAILY_LIMITS[engine]) return () => {}
+        daily[engine] = (daily[engine] ?? 0) + 1
+        setDailyLocal(daily)
+        return () => {
+            const d = getDailyLocal()
+            if (d[engine] > 0) {
+                d[engine] = d[engine] - 1
+                setDailyLocal(d)
+            }
+        }
     }
     counts[engine] = (counts[engine] ?? 0) + 1
     setLocal(counts)
+    return () => {
+        const c = getLocal()
+        if (c[engine] > 0) {
+            c[engine] = c[engine] - 1
+            setLocal(c)
+        }
+    }
 }
 
 export function getLocalCounts(): ConversionCounts {
@@ -129,6 +155,26 @@ export function isAtLimit(engine: EngineType, plan: string): boolean {
     return daily[engine] >= DAILY_LIMITS[engine]
 }
 
+// Track snapshots we ourselves pushed to Supabase so Realtime echoes of our own
+// writes can be distinguished from authoritative manual DB edits. Necessary because
+// paid-plan conversions each trigger an upsert, and out-of-order echoes would
+// otherwise roll back in-flight increments.
+// Bounded FIFO so stray un-echoed snapshots (network drops) can't leak forever and
+// can't poison future manual-edit detection by coincidence.
+const PUSHED_CAP = 64
+const pushedSnapshots: string[] = []
+const snapshotKey = (c: ConversionCounts) => `${c.image}|${c.document}|${c.video}|${c.audio}`
+function rememberPush(key: string) {
+    pushedSnapshots.push(key)
+    if (pushedSnapshots.length > PUSHED_CAP) pushedSnapshots.shift()
+}
+function consumePush(key: string): boolean {
+    const idx = pushedSnapshots.indexOf(key)
+    if (idx === -1) return false
+    pushedSnapshots.splice(idx, 1)
+    return true
+}
+
 export function useConversionCount(user: User | null, plan: string) {
     const synced = useRef(false)
 
@@ -141,24 +187,36 @@ export function useConversionCount(user: User | null, plan: string) {
             .select('*')
             .eq('user_id', user.id)
             .single()
-            .then(({ data }) => {
-                if (!data) return
+            .then(({ data, error }) => {
+                // PGRST116 = no row yet (trigger slow / missing); treat as all-zeros so
+                // local counts still get pushed up. Any other error is a real failure.
+                if (error && error.code !== 'PGRST116') {
+                    console.error('[conversionCount] fetch error:', error)
+                    return
+                }
                 const local = getLocal()
+                const server = {
+                    image: data?.image_count ?? 0,
+                    document: data?.document_count ?? 0,
+                    video: data?.video_count ?? 0,
+                    audio: data?.audio_count ?? 0,
+                }
                 const merged: ConversionCounts = {
-                    image: Math.max(local.image, data.image_count),
-                    document: Math.max(local.document, data.document_count),
-                    video: Math.max(local.video, data.video_count),
-                    audio: Math.max(local.audio, data.audio_count ?? 0),
+                    image: Math.max(local.image, server.image),
+                    document: Math.max(local.document, server.document),
+                    video: Math.max(local.video, server.video),
+                    audio: Math.max(local.audio, server.audio),
                 }
                 setLocal(merged)
 
-                // Push merged back to server if local was higher
-                if (
-                    merged.image !== data.image_count ||
-                    merged.document !== data.document_count ||
-                    merged.video !== data.video_count ||
-                    merged.audio !== (data.audio_count ?? 0)
-                ) {
+                // Push merged back to server if local was higher or row didn't exist yet
+                const needsPush = !data
+                    || merged.image !== server.image
+                    || merged.document !== server.document
+                    || merged.video !== server.video
+                    || merged.audio !== server.audio
+                if (needsPush) {
+                    rememberPush(snapshotKey(merged))
                     supabase.from('conversion_counts').upsert({
                         user_id: user.id,
                         image_count: merged.image,
@@ -166,7 +224,9 @@ export function useConversionCount(user: User | null, plan: string) {
                         video_count: merged.video,
                         audio_count: merged.audio,
                         updated_at: new Date().toISOString(),
-                    }, { onConflict: 'user_id' })
+                    }, { onConflict: 'user_id' }).then(({ error: upsertError }) => {
+                        if (upsertError) console.error('[conversionCount] sign-in upsert error:', upsertError)
+                    })
                 }
 
                 synced.current = true
@@ -190,7 +250,16 @@ export function useConversionCount(user: User | null, plan: string) {
                         video: payload.new.video_count ?? 0,
                         audio: payload.new.audio_count ?? 0,
                     }
-                    // Echo guard: our own syncCountToServer round-trips back here
+                    // Echo guard: if this matches a value we ourselves pushed, it's our own
+                    // round-trip — ignore. Under concurrent conversions, later echoes may
+                    // arrive after local has already moved on; a naive remote===local check
+                    // would misread them as manual edits and roll state back.
+                    if (consumePush(snapshotKey(remote))) return
+
+                    // Second-line guard: burst upserts can collapse into fewer echoes on the
+                    // server side, so we may see an echo whose snapshot was already consumed
+                    // by an earlier identical echo. If remote still matches current local,
+                    // there's nothing authoritative to apply — skip to avoid redundant writes.
                     const local = getLocal()
                     if (remote.image === local.image && remote.document === local.document
                         && remote.video === local.video && remote.audio === local.audio) return
@@ -223,6 +292,7 @@ export function useConversionCount(user: User | null, plan: string) {
     function syncCountToServer() {
         if (!user || !navigator.onLine) return
         const counts = getLocal()
+        rememberPush(snapshotKey(counts))
         supabase.from('conversion_counts').upsert({
             user_id: user.id,
             image_count: counts.image,

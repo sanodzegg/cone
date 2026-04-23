@@ -49,12 +49,14 @@ async function convertFile(file: File, deps: ConversionDeps): Promise<void> {
     deps.setFailedFile(file, msg)
     return
   }
-  // Reserve the slot immediately so parallel conversions don't all pass the same limit check
-  if (limitType) incrementLocalCount(limitType)
+  // Reserve the slot immediately so parallel conversions don't all pass the same limit check.
+  // If the conversion never actually runs (bad settings, engine throws), refund it.
+  const refund = limitType ? incrementLocalCount(limitType, deps.plan) : () => {}
 
   const settings = deps.fileSettings[fileKey(file)]
   const targetFormat = settings?.targetFormat
   if (!targetFormat) {
+    refund()
     deps.setFailedFile(file, 'No target format selected')
     return
   }
@@ -75,6 +77,7 @@ async function convertFile(file: File, deps: ConversionDeps): Promise<void> {
     deps.removeFile(file)
     deps.onConversionSuccess?.(engine.id)
   } catch (err) {
+    refund()
     deps.unmarkFileConverting(file)
     deps.setFailedFile(file, err instanceof Error ? err.message : (err as any)?.message ?? String(err) ?? 'Unknown error')
   }

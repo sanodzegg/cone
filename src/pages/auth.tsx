@@ -36,14 +36,20 @@ export default function Auth() {
         return unsub
     }, [])
 
+    function friendlyAuthError(msg: string) {
+        if (/failed to fetch|networkerror|network request failed/i.test(msg)) return 'No internet connection.'
+        return msg
+    }
+
     async function signInWithProvider(provider: 'github' | 'google') {
         setError(null)
+        if (!navigator.onLine) { setError('No internet connection.'); return }
         setOauthLoading(provider)
         const { data, error } = await supabase.auth.signInWithOAuth({
             provider,
             options: { skipBrowserRedirect: true, redirectTo: 'cone://auth' },
         })
-        if (error) { setError(error.message); setOauthLoading(null); return }
+        if (error) { setError(friendlyAuthError(error.message)); setOauthLoading(null); return }
         if (data.url) window.electron.openExternal(data.url)
     }
 
@@ -51,14 +57,15 @@ export default function Auth() {
         e.preventDefault()
         setError(null)
         setMessage(null)
+        if (!navigator.onLine) { setError('No internet connection.'); return }
         setSubmitting(true)
 
         if (mode === 'login') {
             const { error } = await supabase.auth.signInWithPassword({ email, password })
-            if (error) setError(error.message)
+            if (error) setError(friendlyAuthError(error.message))
         } else {
             const { error } = await supabase.auth.signUp({ email, password })
-            if (error) setError(error.message)
+            if (error) setError(friendlyAuthError(error.message))
             else setMessage('Check your email to confirm your account.')
         }
 

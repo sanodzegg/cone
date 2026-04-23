@@ -9,6 +9,21 @@ import { useTheme } from '@/components/theme/theme-provider'
 
 type Interval = 'monthly' | 'annual'
 
+// Tier ordering for downgrade detection. Pro (monthly/annual) share rank 2.
+const PLAN_RANK: Record<string, number> = {
+    trial: 0,
+    limited: 0,
+    monthly: 1,
+    annual: 1,
+    lifetime: 2,
+}
+const CARD_RANK: Record<string, number> = {
+    trial: 0,
+    limited: 0,
+    pro: 1,
+    lifetime: 2,
+}
+
 const PLANS = [
     {
         id: 'trial',
@@ -118,8 +133,9 @@ export default function Pricing() {
                             (p.id === 'trial' && plan === 'trial' && !showLimited) ||
                             (p.id === 'pro' && plan === interval) ||
                             (p.id === 'lifetime' && plan === 'lifetime')
-                        const isPaidUser = plan === 'monthly' || plan === 'annual' || plan === 'lifetime'
-                        const isFreeTier = p.id === 'trial' || p.id === 'limited'
+                        const userRank = PLAN_RANK[plan] ?? 0
+                        const cardRank = CARD_RANK[p.id]
+                        const isDowngrade = !isCurrent && cardRank < userRank
                         const badge = isCurrent ? 'current' : p.id === 'pro' ? 'popular' : p.id === 'lifetime' ? 'best-value' : undefined
                         return (
                             <PricingCard
@@ -130,10 +146,10 @@ export default function Pricing() {
                                 price={p.price}
                                 priceSuffix={p.priceSuffix}
                                 features={p.features}
-                                ctaLabel={p.ctaLabel}
+                                ctaLabel={isDowngrade ? 'Not available' : p.ctaLabel}
                                 ctaVariant={p.ctaVariant}
                                 badge={badge}
-                                disabled={isFreeTier && isPaidUser}
+                                disabled={isDowngrade}
                                 {...(p.id === 'pro' && { interval, onIntervalChange: setInterval })}
                             />
                         )
