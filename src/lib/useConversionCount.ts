@@ -100,12 +100,47 @@ function getLocal(): ConversionCounts {
 function setLocal(counts: ConversionCounts) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(counts))
     useCountsStore.setState({ counts })
+    reconcilePlanWithCounts(counts)
+}
+
+// Whenever counts change, make sure the plan still matches what the counts imply:
+// if the user is on 'limited' but any category is back under its trial cap, they're
+// actually on 'trial' again (per the app's rule: limited only when everything exhausted).
+// Runs in all code paths that touch counts, not just Realtime events — so admin edits,
+// sign-in merges, increments, and refunds all trigger the reconciliation equally.
+function reconcilePlanWithCounts(counts: ConversionCounts) {
+    const store = useAuthStore.getState()
+    if (store.plan !== 'limited') return
+    const notFullyExhausted = counts.image < LIMITS.image || counts.document < LIMITS.document
+        || counts.video < LIMITS.video || counts.audio < LIMITS.audio
+    if (!notFullyExhausted) return
+    localStorage.removeItem(DAILY_STORAGE_KEY)
+    store.setPlan('trial')
+    const uid = store.user?.id
+    if (uid) {
+        supabase.from('users').update({ plan: 'trial' }).eq('id', uid)
+            .then(({ error }) => { if (error) console.error('[conversionCount] failed to revert plan:', error) })
+    }
 }
 
 // Reactive store so UI re-renders when counts change (sign-in merge, increments, Realtime overwrites)
 export const useCountsStore = create<{ counts: ConversionCounts }>()(() => ({
     counts: getLocal(),
 }))
+
+// Timestamps of upserts we fired ourselves. Realtime echoes those writes back;
+// we skip echoes whose updated_at is in this set so they don't overwrite the
+// authoritative local state we just incremented. Admin edits from the dashboard
+// carry an updated_at that was never put here, so they always pass through.
+// Entries are pruned 10 s after insertion — ample time for any echo to arrive.
+const ownPushTimestamps = new Set<string>()
+function rememberPush(ts: string) {
+    ownPushTimestamps.add(ts)
+    setTimeout(() => ownPushTimestamps.delete(ts), 10_000)
+}
+function isSelfEcho(updatedAt: string | undefined): boolean {
+    return !!updatedAt && ownPushTimestamps.has(updatedAt)
+}
 
 // Returns a refund fn that reverses exactly what this increment did. Counts are
 // reserved at the start of a conversion so parallel attempts can't all pass the
@@ -155,26 +190,6 @@ export function isAtLimit(engine: EngineType, plan: string): boolean {
     return daily[engine] >= DAILY_LIMITS[engine]
 }
 
-// Track snapshots we ourselves pushed to Supabase so Realtime echoes of our own
-// writes can be distinguished from authoritative manual DB edits. Necessary because
-// paid-plan conversions each trigger an upsert, and out-of-order echoes would
-// otherwise roll back in-flight increments.
-// Bounded FIFO so stray un-echoed snapshots (network drops) can't leak forever and
-// can't poison future manual-edit detection by coincidence.
-const PUSHED_CAP = 64
-const pushedSnapshots: string[] = []
-const snapshotKey = (c: ConversionCounts) => `${c.image}|${c.document}|${c.video}|${c.audio}`
-function rememberPush(key: string) {
-    pushedSnapshots.push(key)
-    if (pushedSnapshots.length > PUSHED_CAP) pushedSnapshots.shift()
-}
-function consumePush(key: string): boolean {
-    const idx = pushedSnapshots.indexOf(key)
-    if (idx === -1) return false
-    pushedSnapshots.splice(idx, 1)
-    return true
-}
-
 export function useConversionCount(user: User | null, plan: string) {
     const synced = useRef(false)
 
@@ -216,14 +231,15 @@ export function useConversionCount(user: User | null, plan: string) {
                     || merged.video !== server.video
                     || merged.audio !== server.audio
                 if (needsPush) {
-                    rememberPush(snapshotKey(merged))
+                    const ts = new Date().toISOString()
+                    rememberPush(ts)
                     supabase.from('conversion_counts').upsert({
                         user_id: user.id,
                         image_count: merged.image,
                         document_count: merged.document,
                         video_count: merged.video,
                         audio_count: merged.audio,
-                        updated_at: new Date().toISOString(),
+                        updated_at: ts,
                     }, { onConflict: 'user_id' }).then(({ error: upsertError }) => {
                         if (upsertError) console.error('[conversionCount] sign-in upsert error:', upsertError)
                     })
@@ -233,8 +249,9 @@ export function useConversionCount(user: User | null, plan: string) {
             })
     }, [user, plan])
 
-    // Listen for manual DB edits to conversion_counts via Realtime.
-    // Supabase is authoritative here — we overwrite local outright (no Math.max merge).
+    // Realtime sync: admin edits are applied verbatim; our own echoes are skipped via
+    // the ownPushTimestamps guard so burst self-writes can't overwrite local state with
+    // a stale intermediate value. setLocal calls reconcilePlanWithCounts automatically.
     useEffect(() => {
         if (!user) return
         const channel = supabase
@@ -244,44 +261,13 @@ export function useConversionCount(user: User | null, plan: string) {
                 { event: 'UPDATE', schema: 'public', table: 'conversion_counts' },
                 (payload) => {
                     if (payload.new.user_id !== user.id) return
-                    const remote: ConversionCounts = {
+                    if (isSelfEcho(payload.new.updated_at)) return
+                    setLocal({
                         image: payload.new.image_count ?? 0,
                         document: payload.new.document_count ?? 0,
                         video: payload.new.video_count ?? 0,
                         audio: payload.new.audio_count ?? 0,
-                    }
-                    // Echo guard: if this matches a value we ourselves pushed, it's our own
-                    // round-trip — ignore. Under concurrent conversions, later echoes may
-                    // arrive after local has already moved on; a naive remote===local check
-                    // would misread them as manual edits and roll state back.
-                    if (consumePush(snapshotKey(remote))) return
-
-                    // Second-line guard: burst upserts can collapse into fewer echoes on the
-                    // server side, so we may see an echo whose snapshot was already consumed
-                    // by an earlier identical echo. If remote still matches current local,
-                    // there's nothing authoritative to apply — skip to avoid redundant writes.
-                    const local = getLocal()
-                    if (remote.image === local.image && remote.document === local.document
-                        && remote.video === local.video && remote.audio === local.audio) return
-
-                    setLocal(remote)
-
-                    // If all categories are back within trial limits, clear daily window
-                    // and auto-revert limited → trial (support resetting a user's plan by
-                    // just lowering their counts in Supabase)
-                    const allUnderTrial = remote.image < LIMITS.image && remote.document < LIMITS.document
-                        && remote.video < LIMITS.video && remote.audio < LIMITS.audio
-                    if (allUnderTrial) {
-                        localStorage.removeItem(DAILY_STORAGE_KEY)
-                        const { plan: currentPlan, setPlan } = useAuthStore.getState()
-                        if (currentPlan === 'limited') {
-                            setPlan('trial')
-                            supabase.from('users').update({ plan: 'trial' }).eq('id', user.id)
-                                .then(({ error }) => {
-                                    if (error) console.error('[conversionCount] failed to revert plan:', error)
-                                })
-                        }
-                    }
+                    })
                 }
             )
             .subscribe()
@@ -292,14 +278,15 @@ export function useConversionCount(user: User | null, plan: string) {
     function syncCountToServer() {
         if (!user || !navigator.onLine) return
         const counts = getLocal()
-        rememberPush(snapshotKey(counts))
+        const ts = new Date().toISOString()
+        rememberPush(ts)
         supabase.from('conversion_counts').upsert({
             user_id: user.id,
             image_count: counts.image,
             document_count: counts.document,
             video_count: counts.video,
             audio_count: counts.audio,
-            updated_at: new Date().toISOString(),
+            updated_at: ts,
         }, { onConflict: 'user_id' }).then(({ error }) => {
             if (error) console.error('[conversionCount] sync error:', error)
         })
