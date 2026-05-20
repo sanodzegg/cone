@@ -1,0 +1,93 @@
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+
+const PRICE_TO_PLAN: Record<string, string> = {
+  'pri_01kr6tp1t2wv66fqe48wq109jy': 'monthly',
+  'pri_01kr6tpqy42a1fakn0ddbjb16c': 'annual',
+  'pri_01kr6tq788ans0kc1km9d6c788': 'lifetime',
+}
+
+async function verifySignature(rawBody: string, header: string, secret: string): Promise<boolean> {
+  const parts = Object.fromEntries(header.split(';').map(p => p.split('=')))
+  const ts = parts['ts']
+  const h1 = parts['h1']
+  if (!ts || !h1) return false
+
+  const key = await crypto.subtle.importKey(
+    'raw',
+    new TextEncoder().encode(secret),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign']
+  )
+  const sig = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(`${ts}:${rawBody}`))
+  const computed = Array.from(new Uint8Array(sig)).map(b => b.toString(16).padStart(2, '0')).join('')
+  return computed === h1
+}
+
+Deno.serve(async (req) => {
+  const webhookSecret = Deno.env.get('PADDLE_WEBHOOK_SECRET')
+  if (!webhookSecret) return new Response('Webhook secret not configured', { status: 500 })
+
+  const rawBody = await req.text()
+  const signatureHeader = req.headers.get('Paddle-Signature') ?? ''
+
+  const valid = await verifySignature(rawBody, signatureHeader, webhookSecret)
+  if (!valid) return new Response('Invalid signature', { status: 401 })
+
+  const event = JSON.parse(rawBody)
+  const { event_type, data } = event
+
+  const supabase = createClient(
+    Deno.env.get('SUPABASE_URL')!,
+    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+  )
+
+  if (event_type === 'transaction.completed') {
+    const userId = data.custom_data?.user_id
+    if (!userId) return new Response('Missing user_id in custom_data', { status: 400 })
+
+    const priceId = data.items?.[0]?.price?.id
+    const plan = PRICE_TO_PLAN[priceId]
+    if (!plan) return new Response(`Unknown price ID: ${priceId}`, { status: 400 })
+
+    const isSubscription = plan === 'monthly' || plan === 'annual'
+
+    const { error } = await supabase
+      .from('users')
+      .update({
+        plan,
+        paddle_customer_id: data.customer_id ?? null,
+        paddle_subscription_id: isSubscription ? (data.subscription_id ?? null) : null,
+        paddle_transaction_id: !isSubscription ? data.id : null,
+      })
+      .eq('id', userId)
+
+    if (error) {
+      console.error('Failed to update user plan:', error)
+      return new Response('DB error', { status: 500 })
+    }
+
+    console.log(`Updated user ${userId} to plan ${plan}`)
+    return new Response('OK', { status: 200 })
+  }
+
+  if (event_type === 'subscription.canceled') {
+    const subscriptionId = data.id
+    if (!subscriptionId) return new Response('Missing subscription ID', { status: 400 })
+
+    const { error } = await supabase
+      .from('users')
+      .update({ plan: 'limited', paddle_subscription_id: null })
+      .eq('paddle_subscription_id', subscriptionId)
+
+    if (error) {
+      console.error('Failed to cancel subscription:', error)
+      return new Response('DB error', { status: 500 })
+    }
+
+    console.log(`Canceled subscription ${subscriptionId}`)
+    return new Response('OK', { status: 200 })
+  }
+
+  return new Response('Unhandled event', { status: 200 })
+})
