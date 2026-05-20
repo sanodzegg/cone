@@ -21,6 +21,7 @@ export interface PricingCardProps {
     onIntervalChange?: (interval: Interval) => void
     badge?: Badge
     disabled?: boolean
+    onCtaClick?: () => void
 }
 
 const BADGE_CONFIG: Record<Badge, { label: string; className: string }> = {
@@ -42,6 +43,7 @@ export function PricingCard({
     onIntervalChange,
     badge,
     disabled,
+    onCtaClick,
 }: PricingCardProps) {
     const displayPrice = typeof price === 'object'
         ? (interval === 'monthly' ? price.monthly : price.annual)
@@ -137,7 +139,7 @@ export function PricingCard({
             </CardContent>
 
             <CardFooter className="relative mt-auto">
-                <Button variant={ctaVariant} className="w-full h-10 2xl:h-11 2xl:text-base" disabled={badge === 'current' || disabled}>
+                <Button variant={ctaVariant} className="w-full h-10 2xl:h-11 2xl:text-base" disabled={badge === 'current' || disabled} onClick={onCtaClick}>
                     {badge === 'current' ? 'Current Plan' : interval ? `${ctaLabel} (${interval === 'monthly' ? 'Monthly' : 'Annual'})` : ctaLabel}
                 </Button>
             </CardFooter>

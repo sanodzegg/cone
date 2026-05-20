@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Clock, Zap, Star, Timer } from 'lucide-react'
 import { PricingCard } from '@/components/pricing/pricing-card'
 import { useAuth } from '@/lib/useAuth'
@@ -99,8 +100,16 @@ const PLANS = [
 
 export default function Pricing() {
     const { theme } = useTheme();
-    const { plan } = useAuth()
+    const { user, plan } = useAuth()
+    const navigate = useNavigate()
     const [interval, setInterval] = useState<Interval>('annual')
+
+    function handleCheckout(planId: 'pro' | 'lifetime') {
+        if (!user) { navigate('/account'); return }
+        const resolvedPlan = planId === 'pro' ? interval : 'lifetime'
+        const url = `https://conesoft.app?uid=${user.id}&plan=${resolvedPlan}#pricing`
+        window.electron.openExternal(url)
+    }
     const [videoReady, setVideoReady] = useState(false)
     const trialExhausted = isTrialExhausted()
     const showLimited = plan === 'limited' || (plan === 'trial' && trialExhausted)
@@ -149,6 +158,7 @@ export default function Pricing() {
                                 badge={badge}
                                 disabled={isDowngrade}
                                 {...(p.id === 'pro' && { interval, onIntervalChange: setInterval })}
+                                {...(p.id === 'pro' || p.id === 'lifetime' ? { onCtaClick: () => handleCheckout(p.id as 'pro' | 'lifetime') } : {})}
                             />
                         )
                     })}
