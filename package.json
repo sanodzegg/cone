@@ -42,16 +42,8 @@
     "win": {
       "icon": "build-assets/icon.ico",
       "target": [
-        "nsis",
-        "msix"
+        "nsis"
       ]
-    },
-    "msix": {
-      "identityName": "Conesoft.Conesoft",
-      "publisher": "CN=2F9FE4F3-C390-4CF8-9EDF-67E5029D73CC",
-      "publisherDisplayName": "Conesoft",
-      "applicationId": "Conesoft",
-      "backgroundColor": "#1a1a1a"
     },
     "files": [
       "dist/**",

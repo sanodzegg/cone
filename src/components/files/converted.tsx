@@ -145,7 +145,7 @@ export default function ConvertedFiles() {
                                 const f = snapshot[row.index]
                                 return (
                                     <li key={`${f.name}-${f.inputSize}`} style={{ position: 'absolute', top: row.start, left: 0, right: 0, paddingBottom: ITEM_GAP }} className="flex items-center justify-between p-4 2xl:p-5 rounded-2xl border border-accent bg-secondary/30">
-                                        <div className="flex items-center gap-2 min-w-0">
+                                        <div className="flex items-start gap-4 min-w-0">
                                             <Tooltip>
                                                 <TooltipTrigger className="flex-1 min-w-0 text-left">
                                                     <span className="text-sm 2xl:text-base text-accent-foreground font-body truncate cursor-default block w-full">{f.name}</span>
@@ -181,7 +181,7 @@ export default function ConvertedFiles() {
                     <ul className="space-y-2.5 2xl:space-y-3">
                         {snapshot.map((f) => (
                             <li key={`${f.name}-${f.inputSize}`} className="flex items-center justify-between p-4 2xl:p-5 rounded-2xl border border-accent bg-secondary/30">
-                                <div className="flex items-center gap-2 min-w-0">
+                                <div className="flex items-start gap-4 min-w-0">
                                     <Tooltip>
                                         <TooltipTrigger className="flex-1 min-w-0 text-left">
                                             <span className="text-sm 2xl:text-base text-accent-foreground font-body truncate cursor-default block w-full">{f.name}</span>
