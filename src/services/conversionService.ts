@@ -2,7 +2,7 @@ import { createElement } from 'react'
 import { getEngineForFile } from '@/engines/engineRegistry'
 import { fileKey } from '@/utils/fileUtils'
 import type { ConvertStore } from '@/store/useConvertStore'
-import { isTrialExhausted, incrementLocalCount, getTrialScore, getLocalCounts, getDailyCounts, LIMITED_DAILY_LIMITS, WEIGHTS } from '@/lib/useConversionCount'
+import { isTrialExhausted, spendTokens, getTokensUsed, getDailyTokens, TOKEN_COSTS, TRIAL_TOKEN_LIMIT, DAILY_TOKEN_LIMIT } from '@/lib/useConversionCount'
 import { toEngineType } from '@/lib/ConversionCountContext'
 import { toast } from 'sonner'
 
@@ -50,7 +50,7 @@ async function convertFile(file: File, filePlan: string, deps: ConversionDeps): 
   // before dispatch so parallel conversions use the correct bucket.
   let refund = () => {}
   if (limitType) {
-    const [r, reserved] = incrementLocalCount(limitType, filePlan)
+    const [r, reserved] = spendTokens(limitType, filePlan)
     if (!reserved) {
       const label = limitType.charAt(0).toUpperCase() + limitType.slice(1)
       const msg = filePlan === 'limited' || isTrialExhausted()
@@ -110,66 +110,33 @@ export async function convertAll(files: File[], deps: ConversionDeps): Promise<v
 
   deps.startConversion(pending)
 
-  // If trial is already exhausted, flip before dispatching so the whole batch
-  // runs under limited (daily) rules from the start.
-  if (deps.plan === 'trial' && getTrialScore(getLocalCounts()) >= 1.0) {
+  // If trial is already exhausted entering the batch, flip up front so state/UI reflect it.
+  if (deps.plan === 'trial' && getTokensUsed() >= TRIAL_TOKEN_LIMIT) {
     deps.onPlanExhausted?.()
     deps.plan = 'limited'
   }
 
-  // Assign each file its effective plan before dispatch using a single shared score
-  // pool — each engine draws from the same remaining budget. Per-engine independent
-  // budgets were wrong: they each got floor(remaining/weight) slots, letting all
-  // engines over-allocate far beyond the actual remaining score.
-  const filePlans: Map<File, string> = new Map()
-  let needsPlanFlip = false
-
-  if (deps.plan === 'trial') {
-    let remainingScore = 1.0 - getTrialScore(getLocalCounts())
-    for (const f of pending) {
-      const engineId = getEngineForFile(f)?.id ?? ''
-      const limitType = toEngineType(engineId)
-      if (!limitType) { filePlans.set(f, 'trial'); continue }
-      const cost = WEIGHTS[limitType]
-      // 1e-9 epsilon absorbs FP drift so an exactly-fitting file isn't wrongly rejected
-      if (remainingScore >= cost - 1e-9) {
-        filePlans.set(f, 'trial')
-        remainingScore -= cost
-      } else {
-        filePlans.set(f, 'limited')
-        needsPlanFlip = true
-      }
-    }
-  } else {
-    for (const f of pending) filePlans.set(f, deps.plan)
-  }
-
-  if (needsPlanFlip) {
-    deps.onPlanExhausted?.()
-  }
-
-  // Pre-flight: count how many files will be blocked by the daily limit.
-  // Files assigned 'limited' plan compete for the daily bucket; check upfront
-  // so we can skip them cleanly and show one clear toast instead of per-file errors.
-  const dailyNow = getDailyCounts()
-  const dailyUsed: Record<string, number> = {
-    image: dailyNow.image,
-    document: dailyNow.document,
-    video: dailyNow.video,
-    audio: dailyNow.audio,
-  }
+  // Pre-flight (free tiers): simulate the trial→daily spill so we can skip files the combined
+  // budget can't cover and show one clear toast instead of per-file errors. spendTokens drains
+  // the lifetime trial budget first, then spills the remainder into the daily allowance — a
+  // single conversion can straddle the boundary (e.g. 7 trial + 1 daily). Mid-batch trial
+  // exhaustion is handled by onConversionSuccess (main.tsx) once tokens_used hits the cap.
   const blockedByDaily = new Set<File>()
-
-  for (const f of pending) {
-    if (filePlans.get(f) !== 'limited') continue
-    const engineId = getEngineForFile(f)?.id ?? ''
-    const limitType = toEngineType(engineId)
-    if (!limitType) continue
-    const used = dailyUsed[limitType] ?? 0
-    if (used >= LIMITED_DAILY_LIMITS[limitType]) {
-      blockedByDaily.add(f)
-    } else {
-      dailyUsed[limitType] = used + 1
+  if (deps.plan === 'trial' || deps.plan === 'limited') {
+    let simTrial = getTokensUsed()
+    let simDaily = getDailyTokens()
+    for (const f of pending) {
+      const limitType = toEngineType(getEngineForFile(f)?.id ?? '')
+      if (!limitType) continue
+      const cost = TOKEN_COSTS[limitType]
+      const trialPart = Math.min(cost, Math.max(0, TRIAL_TOKEN_LIMIT - simTrial))
+      const dailyPart = cost - trialPart
+      if (dailyPart > 0 && simDaily + dailyPart > DAILY_TOKEN_LIMIT) {
+        blockedByDaily.add(f)
+      } else {
+        simTrial += trialPart
+        simDaily += dailyPart
+      }
     }
   }
 
@@ -206,13 +173,13 @@ export async function convertAll(files: File[], deps: ConversionDeps): Promise<v
   const nonImages = dispatchPending.filter((f) => getEngineForFile(f)?.id !== 'image')
 
   const imagePromise = runWithConcurrency(
-    images.map((f) => () => convertFile(f, filePlans.get(f) ?? deps.plan, wrappedDeps)),
+    images.map((f) => () => convertFile(f, deps.plan, wrappedDeps)),
     IMAGE_CONCURRENCY
   )
 
   const nonImagePromise = (async () => {
     for (const f of nonImages) {
-      await convertFile(f, filePlans.get(f) ?? deps.plan, wrappedDeps)
+      await convertFile(f, deps.plan, wrappedDeps)
     }
   })()
 

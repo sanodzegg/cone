@@ -5,12 +5,30 @@ audit pass are listed at the bottom for context.
 
 ---
 
-## 🎯 Tomorrow's focus — `tokens_used` refactor (spec)
+## ✅ `tokens_used` refactor — IMPLEMENTED (2026-06-03)
 
-Replace the derived weighted-score quota with an explicit, stored **`tokens_used`**
-counter. Keep per-category counts for analytics/bonuses. Decouples the quota *currency*
+Replaced the derived weighted-score quota with an explicit, stored **`tokens_used`**
+counter. Per-category counts kept for analytics/bonuses. Decouples the quota *currency*
 from *what was converted*, and locks historical pricing so changing weights later doesn't
 re-price the past.
+
+**Shipped:** costs image **1** / document **5** / video **8** / audio **6**;
+`TRIAL_TOKEN_LIMIT=100`, `DAILY_TOKEN_LIMIT=50`. `spendTokens()` helper; token-based
+gate/flip/UsageCard; sync carries `tokens_used` (max-merge). Migration
+`20260603120000_add_tokens_used.sql` (backfill at OLD 1/5/5/5 so existing standing is kept).
+The limited→trial reset moved **server-side**: trigger `reset_plan_on_low_tokens`
+(`20260603130000`), keeping the `subscription_end IS NULL` churned-subscriber guard.
+Client-side `reconcilePlanWithCounts` removed.
+
+> **Apply both migrations** (column first, then trigger) before running signed-in.
+
+**⚠️ Known limitation (accepted — option A):** sign-in still `max`-merges `tokens_used`, so
+an admin reset of `tokens_used` only sticks while the user's app is **running** (the realtime
+event overwrites local verbatim). If reset while the app is closed, the next sign-in
+re-inflates local via `max` and the plan can bounce back to limited. Operational workaround:
+tell the customer to keep the app open during a reset. Proper fix if it ever becomes
+frequent: **recency-based merge** on sign-in (trust whichever side changed most recently —
+server `updated_at` vs last local write — instead of blindly taking `max`).
 
 ### Model
 - **`tokens_used`** — lifetime, monotonic (only ever increments). Source of truth for the
@@ -63,9 +81,9 @@ one-line change.
 - `src/types` if a counts interface gains `tokens_used`.
 - `supabase/migrations/` — new migration (column + backfill).
 
-### Open decisions before coding
-- [ ] `DAILY_TOKEN_LIMIT` value (suggest 20/day).
-- [ ] Confirm token costs (1 / 5 / 5 / 5) are final.
+### Decisions made
+- [x] `DAILY_TOKEN_LIMIT` = **50/day**.
+- [x] Token costs = **image 1 / document 5 / video 8 / audio 6** (heavier media). Backfill stays 1/5/5/5.
 
 > Pairs naturally with item #1 below — once `spendTokens` is the single entry point,
 > routing bulk/favicon/compression through it (if you decide they should count) is trivial.

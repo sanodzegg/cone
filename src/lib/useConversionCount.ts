@@ -1,7 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { create } from 'zustand'
 import { supabase } from './supabase'
-import { useAuthStore } from '@/store/useAuthStore'
 import type { User } from '@supabase/supabase-js'
 
 export type EngineType = 'image' | 'document' | 'video' | 'audio'
@@ -16,138 +15,153 @@ export interface ConversionCounts {
 const STORAGE_KEY = 'conesoft_conversion_counts'
 const DAILY_STORAGE_KEY = 'conesoft_daily_counts'
 
-// Per-category weights: 1 / budget. Score = sum(count * weight), threshold at 1.0.
-// TOKEN_TOTAL maps the score to user-visible credits: image = 1 cr, others = 5 cr each.
-export const TOKEN_TOTAL = 100
-export const WEIGHTS = {
-    image: 1 / 100,
-    document: 1 / 20,
-    video: 1 / 20,
-    audio: 1 / 20,
+// `tokens_used` is the single quota currency. Per-category counts are kept only for
+// analytics/bonuses and are NOT arithmetically linked to tokens_used (see TODO.md spec).
+// Token cost per conversion, applied going forward:
+export const TOKEN_COSTS: Record<EngineType, number> = {
+    image: 1,
+    document: 5,
+    video: 8,
+    audio: 6,
 }
 
-const LIMITS: ConversionCounts = {
-    image: 100,
-    document: 20,
-    video: 20,
-    audio: 20,
+// Cost used to value pre-token historical usage at migration/backfill time. Kept at the
+// OLD flat rate (image 1, others 5) so existing users' standing doesn't shift when the
+// heavier media costs land — the new costs apply only to new conversions. Mirrors the
+// SQL backfill in migrations/20260603120000_add_tokens_used.sql.
+const BACKFILL_COSTS: Record<EngineType, number> = {
+    image: 1,
+    document: 5,
+    video: 5,
+    audio: 5,
 }
 
-const DAILY_LIMITS: ConversionCounts = {
-    image: 20,
-    document: 20,
-    video: 10,
-    audio: 10,
+export const TRIAL_TOKEN_LIMIT = 100   // lifetime trial budget
+export const DAILY_TOKEN_LIMIT = 50    // limited-tier daily allowance
+
+interface LocalCounts extends ConversionCounts {
+    tokensUsed: number
 }
 
-export const TRIAL_LIMITS = LIMITS
-export const LIMITED_DAILY_LIMITS = DAILY_LIMITS
-
-interface DailyCounts {
-    image: number
-    document: number
-    video: number
-    audio: number
+interface DailyTokens {
+    tokens: number
     resetAt: number // epoch ms when the window expires
 }
 
-function getDailyLocal(): DailyCounts {
+function freshDaily(): DailyTokens {
+    return { tokens: 0, resetAt: Date.now() + 24 * 60 * 60 * 1000 }
+}
+
+function getDailyLocal(): DailyTokens {
     try {
         const raw = localStorage.getItem(DAILY_STORAGE_KEY)
-        if (!raw) return { image: 0, document: 0, video: 0, audio: 0, resetAt: Date.now() + 24 * 60 * 60 * 1000 }
-        const parsed = JSON.parse(raw) as DailyCounts
-        if (Date.now() > parsed.resetAt) {
-            const fresh: DailyCounts = { image: 0, document: 0, video: 0, audio: 0, resetAt: Date.now() + 24 * 60 * 60 * 1000 }
+        if (!raw) return freshDaily()
+        const parsed = JSON.parse(raw)
+        // Old per-category daily format (pre-tokens) has no numeric `tokens` — start fresh.
+        if (typeof parsed.tokens !== 'number' || typeof parsed.resetAt !== 'number') {
+            const fresh = freshDaily()
             localStorage.setItem(DAILY_STORAGE_KEY, JSON.stringify(fresh))
             return fresh
         }
-        return parsed
+        if (Date.now() > parsed.resetAt) {
+            const fresh = freshDaily()
+            localStorage.setItem(DAILY_STORAGE_KEY, JSON.stringify(fresh))
+            return fresh
+        }
+        return parsed as DailyTokens
     } catch {
-        return { image: 0, document: 0, video: 0, audio: 0, resetAt: Date.now() + 24 * 60 * 60 * 1000 }
+        return freshDaily()
     }
 }
 
-function setDailyLocal(counts: DailyCounts) {
-    localStorage.setItem(DAILY_STORAGE_KEY, JSON.stringify(counts))
+function setDailyLocal(daily: DailyTokens) {
+    localStorage.setItem(DAILY_STORAGE_KEY, JSON.stringify(daily))
+    useCountsStore.setState({ dailyTokens: daily.tokens })
 }
 
-export function getDailyCounts(): DailyCounts {
+export function getDailyCounts(): DailyTokens {
     return getDailyLocal()
 }
 
-// Score = sum(count * weight), capped at 1.0 per category. Flip to 'limited' at 0.9.
-const EXHAUSTION_THRESHOLD = 1.0
+export function getDailyTokens(): number {
+    return getDailyLocal().tokens
+}
 
-export function getTrialScore(counts: ConversionCounts): number {
+function backfillTokens(c: ConversionCounts): number {
     return (
-        Math.min(counts.image * WEIGHTS.image, 1) +
-        Math.min(counts.document * WEIGHTS.document, 1) +
-        Math.min(counts.video * WEIGHTS.video, 1) +
-        Math.min(counts.audio * WEIGHTS.audio, 1)
+        c.image * BACKFILL_COSTS.image +
+        c.document * BACKFILL_COSTS.document +
+        c.video * BACKFILL_COSTS.video +
+        c.audio * BACKFILL_COSTS.audio
     )
 }
 
-export function isTrialExhausted(): boolean {
-    return getTrialScore(getLocal()) >= EXHAUSTION_THRESHOLD
-}
-
-function getLocal(): ConversionCounts {
+function getLocal(): LocalCounts {
     try {
         const raw = localStorage.getItem(STORAGE_KEY)
-        if (!raw) return { image: 0, document: 0, video: 0, audio: 0 }
+        if (!raw) return { image: 0, document: 0, video: 0, audio: 0, tokensUsed: 0 }
         const parsed = JSON.parse(raw)
-        return {
+        const counts: ConversionCounts = {
             image: parsed.image ?? 0,
             document: parsed.document ?? 0,
             video: parsed.video ?? 0,
             audio: parsed.audio ?? 0,
         }
+        // Backfill tokensUsed from existing counts (old flat rate) for pre-token local state.
+        const tokensUsed = typeof parsed.tokensUsed === 'number' ? parsed.tokensUsed : backfillTokens(counts)
+        return { ...counts, tokensUsed }
     } catch {
-        return { image: 0, document: 0, video: 0, audio: 0 }
+        return { image: 0, document: 0, video: 0, audio: 0, tokensUsed: 0 }
     }
 }
 
-function setLocal(counts: ConversionCounts, { reconcile = false } = {}) {
+function setLocal(next: LocalCounts) {
     const prev = getLocal()
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(counts))
-    useCountsStore.setState({ counts })
-    // If the overall score dropped back below exhaustion, daily buckets are stale — clear them.
-    if (getTrialScore(prev) >= EXHAUSTION_THRESHOLD && getTrialScore(counts) < EXHAUSTION_THRESHOLD) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
+    useCountsStore.setState({
+        counts: { image: next.image, document: next.document, video: next.video, audio: next.audio },
+        tokensUsed: next.tokensUsed,
+    })
+    // If tokens dropped back below the trial cap (e.g. admin refund), the daily bucket is stale — clear it.
+    // The limited→trial plan flip itself is handled server-side now (DB trigger reset_plan_on_low_tokens),
+    // and propagates back to the app via the users-table Realtime subscription in useAuthStore.
+    if (prev.tokensUsed >= TRIAL_TOKEN_LIMIT && next.tokensUsed < TRIAL_TOKEN_LIMIT) {
         localStorage.removeItem(DAILY_STORAGE_KEY)
-    }
-    if (reconcile) reconcilePlanWithCounts(counts)
-}
-
-// Only called from authoritative sources (Realtime events, sign-in merge) — never from
-// local refunds, so no threshold games needed: score < 1.0 means trial isn't exhausted.
-function reconcilePlanWithCounts(counts: ConversionCounts) {
-    const store = useAuthStore.getState()
-    if (store.plan !== 'limited') return
-    // 'limited' is overloaded: it means *either* an exhausted trial (no subscription
-    // history) *or* a churned/expired subscription. Only the former may revert to a
-    // fresh 'trial' budget. A user with any subscription_end has paid before — never
-    // resurrect them to 'trial' (that would hand back a trial budget AND overwrite
-    // the real plan in the DB below). They stay 'limited' (daily budget).
-    if (store.subscriptionEnd) return
-    if (getTrialScore(counts) >= EXHAUSTION_THRESHOLD) return
-    store.setPlan('trial')
-    const uid = store.user?.id
-    if (uid) {
-        supabase.from('users').update({ plan: 'trial' }).eq('id', uid)
-            .then(({ error }) => { if (error) console.error('[conversionCount] failed to revert plan:', error) })
+        useCountsStore.setState({ dailyTokens: 0 })
     }
 }
 
-// Reactive store so UI re-renders when counts change (sign-in merge, increments, Realtime overwrites)
-export const useCountsStore = create<{ counts: ConversionCounts }>()(() => ({
-    counts: getLocal(),
-}))
+export function getTokensUsed(): number {
+    return getLocal().tokensUsed
+}
 
-// Timestamps of upserts we fired ourselves. Realtime echoes those writes back;
-// we skip echoes whose updated_at is in this set so they don't overwrite the
-// authoritative local state we just incremented. Admin edits from the dashboard
-// carry an updated_at that was never put here, so they always pass through.
-// Entries are pruned 10 s after insertion — ample time for any echo to arrive.
+export function isTrialExhausted(): boolean {
+    return getLocal().tokensUsed >= TRIAL_TOKEN_LIMIT
+}
+
+export function getLocalCounts(): ConversionCounts {
+    const l = getLocal()
+    return { image: l.image, document: l.document, video: l.video, audio: l.audio }
+}
+
+// Reactive store so UI re-renders when usage changes (sign-in merge, spends, Realtime overwrites).
+export const useCountsStore = create<{
+    counts: ConversionCounts
+    tokensUsed: number
+    dailyTokens: number
+}>()(() => {
+    const l = getLocal()
+    return {
+        counts: { image: l.image, document: l.document, video: l.video, audio: l.audio },
+        tokensUsed: l.tokensUsed,
+        dailyTokens: getDailyLocal().tokens,
+    }
+})
+
+// Timestamps of upserts we fired ourselves. Realtime echoes those writes back; we skip
+// echoes whose updated_at is in this set so they don't overwrite the authoritative local
+// state we just incremented. Admin edits from the dashboard carry an updated_at that was
+// never put here, so they always pass through. Entries are pruned 10 s after insertion.
 const ownPushTimestamps = new Set<string>()
 function rememberPush(ts: string) {
     ownPushTimestamps.add(ts)
@@ -157,50 +171,66 @@ function isSelfEcho(updatedAt: string | undefined): boolean {
     return !!updatedAt && ownPushTimestamps.has(updatedAt)
 }
 
-// Returns a refund fn that reverses exactly what this increment did. Counts are
-// reserved at the start of a conversion so parallel attempts can't all pass the
-// same limit check; call the returned refund fn if the conversion ends up failing
-// so the user doesn't lose a slot.
-// Returns [refund, reserved]. reserved=false means the limit was already full and
-// no slot was taken — caller must not proceed with the conversion.
-export function incrementLocalCount(engine: EngineType, plan: string): [() => void, boolean] {
-    // limited plan: track daily window only, not the lifetime total
-    if (plan === 'limited') {
-        const daily = getDailyLocal()
-        if (daily[engine] >= DAILY_LIMITS[engine]) return [() => {}, false]
-        daily[engine] = (daily[engine] ?? 0) + 1
-        setDailyLocal(daily)
+// Spend tokens for one conversion (reserved up front). Free tiers (trial + limited) draw from
+// the lifetime trial budget FIRST, then spill the remainder into the daily allowance — so a
+// single conversion can straddle the boundary (e.g. at 93/100 an 8-token job uses 7 trial + 1
+// daily → daily 1/50). tokensUsed therefore tops out at TRIAL_TOKEN_LIMIT and represents trial
+// budget consumed; the daily bucket holds today's overflow/limited spend; per-category counts
+// record every conversion regardless. Synchronous localStorage RMW → parallel-safe. Returns
+// [refund, reserved]; reserved=false means the combined free budget can't cover it. Paid plans
+// are ungated. Call refund() if the conversion later fails — it reverses the exact split taken.
+export function spendTokens(engine: EngineType, plan: string): [() => void, boolean] {
+    const cost = TOKEN_COSTS[engine]
+
+    // Paid plans: ungated — just record the per-category analytics count.
+    if (plan !== 'trial' && plan !== 'limited') {
+        const local = getLocal()
+        local[engine] += 1
+        setLocal(local)
         return [() => {
-            const d = getDailyLocal()
-            if (d[engine] > 0) {
-                d[engine] = d[engine] - 1
-                setDailyLocal(d)
-            }
+            const l = getLocal()
+            if (l[engine] > 0) l[engine] -= 1
+            setLocal(l)
         }, true]
     }
-    // trial + paid: always increment lifetime total
-    const counts = getLocal()
-    counts[engine] = (counts[engine] ?? 0) + 1
-    setLocal(counts)
+
+    // Free tiers: trial budget first, overflow into the daily allowance.
+    const trialRemaining = Math.max(0, TRIAL_TOKEN_LIMIT - getLocal().tokensUsed)
+    const trialPart = Math.min(cost, trialRemaining)
+    const dailyPart = cost - trialPart
+
+    if (dailyPart > 0) {
+        const daily = getDailyLocal()
+        if (daily.tokens + dailyPart > DAILY_TOKEN_LIMIT) return [() => {}, false]
+        daily.tokens += dailyPart
+        setDailyLocal(daily)
+    }
+
+    const local = getLocal()
+    local[engine] += 1
+    local.tokensUsed += trialPart // ≤ trialRemaining, so tokensUsed caps at TRIAL_TOKEN_LIMIT
+    setLocal(local)
+
     return [() => {
-        const c = getLocal()
-        if (c[engine] > 0) {
-            c[engine] = c[engine] - 1
-            setLocal(c)
+        if (dailyPart > 0) {
+            const d = getDailyLocal()
+            d.tokens = Math.max(0, d.tokens - dailyPart)
+            setDailyLocal(d)
         }
+        const l = getLocal()
+        if (l[engine] > 0) l[engine] -= 1
+        l.tokensUsed = Math.max(0, l.tokensUsed - trialPart)
+        setLocal(l)
     }, true]
 }
 
-export function getLocalCounts(): ConversionCounts {
-    return getLocal()
-}
-
+// "At limit" = this conversion can't be covered by the combined trial + daily free budget.
 export function isAtLimit(engine: EngineType, plan: string): boolean {
     if (plan !== 'trial' && plan !== 'limited') return false
-    if (plan === 'limited') {
-        return getDailyLocal()[engine] >= DAILY_LIMITS[engine]
-    }
-    return getTrialScore(getLocal()) >= EXHAUSTION_THRESHOLD
+    const cost = TOKEN_COSTS[engine]
+    const trialRemaining = Math.max(0, TRIAL_TOKEN_LIMIT - getLocal().tokensUsed)
+    const dailyPart = Math.max(0, cost - trialRemaining)
+    return dailyPart > 0 && getDailyTokens() + dailyPart > DAILY_TOKEN_LIMIT
 }
 
 export function useConversionCount(user: User | null) {
@@ -209,7 +239,7 @@ export function useConversionCount(user: User | null) {
     useEffect(() => {
         if (!user || !navigator.onLine || synced.current) return
 
-        // Fetch server counts and take the higher of server vs local
+        // Fetch server counts and take the higher of server vs local (all monotonic).
         supabase
             .from('conversion_counts')
             .select('*')
@@ -228,21 +258,24 @@ export function useConversionCount(user: User | null) {
                     document: data?.document_count ?? 0,
                     video: data?.video_count ?? 0,
                     audio: data?.audio_count ?? 0,
+                    tokensUsed: data?.tokens_used ?? 0,
                 }
-                const merged: ConversionCounts = {
+                const merged: LocalCounts = {
                     image: Math.max(local.image, server.image),
                     document: Math.max(local.document, server.document),
                     video: Math.max(local.video, server.video),
                     audio: Math.max(local.audio, server.audio),
+                    tokensUsed: Math.max(local.tokensUsed, server.tokensUsed),
                 }
-                setLocal(merged, { reconcile: true })
+                setLocal(merged)
 
-                // Push merged back to server if local was higher or row didn't exist yet
+                // Push merged back if local was higher or the row didn't exist yet.
                 const needsPush = !data
                     || merged.image !== server.image
                     || merged.document !== server.document
                     || merged.video !== server.video
                     || merged.audio !== server.audio
+                    || merged.tokensUsed !== server.tokensUsed
                 if (needsPush) {
                     const ts = new Date().toISOString()
                     rememberPush(ts)
@@ -252,6 +285,7 @@ export function useConversionCount(user: User | null) {
                         document_count: merged.document,
                         video_count: merged.video,
                         audio_count: merged.audio,
+                        tokens_used: merged.tokensUsed,
                         updated_at: ts,
                     }, { onConflict: 'user_id' }).then(({ error: upsertError }) => {
                         if (upsertError) console.error('[conversionCount] sign-in upsert error:', upsertError)
@@ -262,9 +296,10 @@ export function useConversionCount(user: User | null) {
             })
     }, [user])
 
-    // Realtime sync: admin edits are applied verbatim; our own echoes are skipped via
-    // the ownPushTimestamps guard so burst self-writes can't overwrite local state with
-    // a stale intermediate value. setLocal calls reconcilePlanWithCounts automatically.
+    // Realtime sync: admin edits are applied verbatim; our own echoes are skipped via the
+    // ownPushTimestamps guard so burst self-writes can't overwrite local state with a stale
+    // intermediate value. The limited→trial plan flip is handled by a DB trigger and reaches
+    // the app through the users-table Realtime subscription in useAuthStore.
     useEffect(() => {
         if (!user) return
         const channel = supabase
@@ -275,35 +310,40 @@ export function useConversionCount(user: User | null) {
                 (payload) => {
                     if (payload.new.user_id !== user.id) return
                     if (isSelfEcho(payload.new.updated_at)) return
-                    setLocal({
+                    const counts: ConversionCounts = {
                         image: payload.new.image_count ?? 0,
                         document: payload.new.document_count ?? 0,
                         video: payload.new.video_count ?? 0,
                         audio: payload.new.audio_count ?? 0,
-                    }, { reconcile: true })
+                    }
+                    setLocal({
+                        ...counts,
+                        tokensUsed: typeof payload.new.tokens_used === 'number' ? payload.new.tokens_used : backfillTokens(counts),
+                    })
                 }
             )
             .subscribe()
         return () => { supabase.removeChannel(channel) }
     }, [user])
 
-    // Debounced so burst conversions (e.g. Convert All on 20 files) collapse into a
-    // single upsert fired 800 ms after the last success, carrying the final counts.
+    // Debounced so burst conversions (e.g. Convert All on 20 files) collapse into a single
+    // upsert fired 800 ms after the last success, carrying the final counts + tokens.
     const syncTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
     function syncCountToServer() {
         if (!user || !navigator.onLine) return
         if (syncTimerRef.current) clearTimeout(syncTimerRef.current)
         syncTimerRef.current = setTimeout(() => {
             syncTimerRef.current = null
-            const counts = getLocal()
+            const local = getLocal()
             const ts = new Date().toISOString()
             rememberPush(ts)
             supabase.from('conversion_counts').upsert({
                 user_id: user.id,
-                image_count: counts.image,
-                document_count: counts.document,
-                video_count: counts.video,
-                audio_count: counts.audio,
+                image_count: local.image,
+                document_count: local.document,
+                video_count: local.video,
+                audio_count: local.audio,
+                tokens_used: local.tokensUsed,
                 updated_at: ts,
             }, { onConflict: 'user_id' }).then(({ error }) => {
                 if (error) console.error('[conversionCount] sync error:', error)
