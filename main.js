@@ -1,6 +1,17 @@
 const { app, BrowserWindow, ipcMain, Notification, screen, shell } = require('electron')
 const path = require('path')
 
+// Last-resort handlers so an unexpected throw in the main process doesn't silently kill the
+// app. Default Electron behavior on an uncaught exception is to terminate; logging and
+// continuing keeps the window alive (the renderer has its own ErrorBoundary). Installed as
+// early as possible so they cover startup too.
+process.on('uncaughtException', (err) => {
+  console.error('[main] uncaught exception:', err)
+})
+process.on('unhandledRejection', (reason) => {
+  console.error('[main] unhandled rejection:', reason)
+})
+
 // Register deep link protocol for OAuth callbacks
 if (process.defaultApp) {
   if (process.argv.length >= 2) {
@@ -85,18 +96,23 @@ app.on('second-instance', (_event, argv) => {
   }
 })
 
-app.whenReady().then(() => {
-  createWindow()
-  registerConvertHandlers()
-  registerBulkConvertHandlers(mainWindow)
-  registerScreenshotHandlers(mainWindow)
-  registerPdfToolsHandlers(mainWindow)
-  registerWebsitePdfHandlers(mainWindow)
-  registerFileSaveHandlers(mainWindow)
-  registerBatchRenameHandlers()
-  registerLighthouseHandlers(mainWindow)
-  registerPdfEditorHandlers(mainWindow)
-})
+// Only the primary instance boots a window. A second instance already called app.quit()
+// above; guarding here ensures app.whenReady() can't still fire createWindow() for it and
+// flash a stray window (the exact case single-instance matters — OAuth deep-link relaunch).
+if (gotLock) {
+  app.whenReady().then(() => {
+    createWindow()
+    registerConvertHandlers()
+    registerBulkConvertHandlers(mainWindow)
+    registerScreenshotHandlers(mainWindow)
+    registerPdfToolsHandlers(mainWindow)
+    registerWebsitePdfHandlers(mainWindow)
+    registerFileSaveHandlers(mainWindow)
+    registerBatchRenameHandlers()
+    registerLighthouseHandlers(mainWindow)
+    registerPdfEditorHandlers(mainWindow)
+  })
+}
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit()

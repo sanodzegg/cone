@@ -12,9 +12,12 @@ const sharp = require(sharpPath)
 
 const heicConvert = require('heic-convert')
 
-// ffmpeg-static binary path (unpacked from asar in production)
+// ffmpeg-static binary path (unpacked from asar in production).
+// ffmpeg-static names the binary `ffmpeg.exe` on Windows and `ffmpeg` elsewhere — the
+// packaged path must match or video/audio conversion fails with ENOENT on Windows.
+const ffmpegBinaryName = process.platform === 'win32' ? 'ffmpeg.exe' : 'ffmpeg'
 const ffmpegStaticPath = app.isPackaged
-  ? path.join(process.resourcesPath, 'app.asar.unpacked', 'node_modules', 'ffmpeg-static', 'ffmpeg')
+  ? path.join(process.resourcesPath, 'app.asar.unpacked', 'node_modules', 'ffmpeg-static', ffmpegBinaryName)
   : require('ffmpeg-static')
 const ffmpeg = require('fluent-ffmpeg')
 

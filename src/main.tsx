@@ -5,6 +5,7 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { HashRouter as BrowserRouter } from 'react-router-dom'
 import { ThemeProvider } from '@/components/theme/theme-provider'
+import { ErrorBoundary } from '@/components/error-boundary'
 import Navigation from './components/navigation/navigation'
 import { useAuthStore } from './store/useAuthStore'
 import { useSettingsSync } from './lib/useSettingsSync'
@@ -73,7 +74,9 @@ createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <BrowserRouter>
       <ThemeProvider>
-        <App />
+        <ErrorBoundary>
+          <App />
+        </ErrorBoundary>
         <Toaster />
       </ThemeProvider>
     </BrowserRouter>
