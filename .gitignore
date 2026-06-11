@@ -37,3 +37,8 @@ Thumbs.db
 
 # md
 ARCHITECTURE.md
+
+# Claude Code skills + local settings (personal tooling, not part of the app)
+.claude/
+.agents/
+skills-lock.json
