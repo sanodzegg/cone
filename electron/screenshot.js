@@ -16,8 +16,16 @@ let browserReady = false
 let browserSetupPromise = null
 
 async function ensureBrowser(mainWindow) {
-  if (browserReady) return true
-  if (browserSetupPromise) return browserSetupPromise
+  // The renderer resets to 'unknown' on every mount and only updates from these
+  // events, so the already-ready/in-flight paths must re-emit or the UI spins forever.
+  if (browserReady) {
+    mainWindow.webContents.send('screenshot-browser-status', { status: 'ready' })
+    return true
+  }
+  if (browserSetupPromise) {
+    mainWindow.webContents.send('screenshot-browser-status', { status: 'downloading' })
+    return browserSetupPromise
+  }
 
   browserSetupPromise = (async () => {
     try {
