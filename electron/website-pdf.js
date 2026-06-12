@@ -68,7 +68,7 @@ function registerWebsitePdfHandlers(mainWindow) {
         await page.waitForTimeout(500)
       }
 
-      // Replace videos — after all waits, so extra wait time benefits video loading too
+      // Replace videos - after all waits, so extra wait time benefits video loading too
       await page.evaluate(() => {
         document.querySelectorAll('video').forEach(video => {
           const poster = video.getAttribute('poster')
@@ -90,7 +90,7 @@ function registerWebsitePdfHandlers(mainWindow) {
             img.src = canvas.toDataURL()
             video.replaceWith(img)
           } else {
-            // Not loaded in time — hide wrapper
+            // Not loaded in time - hide wrapper
             let el = video
             while (el.parentElement) {
               const parent = el.parentElement
@@ -106,7 +106,7 @@ function registerWebsitePdfHandlers(mainWindow) {
 
       await page.emulateMedia({ media: 'print' })
 
-      // Hide fixed/sticky elements — they repeat on every page break in Chromium
+      // Hide fixed/sticky elements - they repeat on every page break in Chromium
       await page.evaluate(() => {
         document.querySelectorAll('*').forEach(el => {
           // Hide shadow DOM chat/widget host elements by tag name
@@ -133,7 +133,7 @@ function registerWebsitePdfHandlers(mainWindow) {
         })
       })
 
-      // Strip box-shadow and filter — Chromium renders these as colored blocks at page breaks
+      // Strip box-shadow and filter - Chromium renders these as colored blocks at page breaks
       // Also suppress known chat/support widgets that survive fixed-element hiding
       await page.addStyleTag({
         content: `

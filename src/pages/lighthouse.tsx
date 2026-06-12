@@ -71,10 +71,10 @@ function scoreBg(score: number) {
 type VitalKey = 'lcp' | 'fcp' | 'cls' | 'tbt' | 'si'
 
 const VITAL_META: Record<VitalKey, { label: string; good: number; poor: number; unit: string; description: string }> = {
-  lcp: { label: 'LCP', good: 2.5, poor: 4, unit: 's', description: 'Largest Contentful Paint — how fast the main content loads' },
-  fcp: { label: 'FCP', good: 1.8, poor: 3, unit: 's', description: 'First Contentful Paint — when the first content appears' },
-  cls: { label: 'CLS', good: 0.1, poor: 0.25, unit: '', description: 'Cumulative Layout Shift — visual stability during load' },
-  tbt: { label: 'TBT', good: 200, poor: 600, unit: 'ms', description: 'Total Blocking Time — main thread blocked, affects interactivity' },
+  lcp: { label: 'LCP', good: 2.5, poor: 4, unit: 's', description: 'Largest Contentful Paint - how fast the main content loads' },
+  fcp: { label: 'FCP', good: 1.8, poor: 3, unit: 's', description: 'First Contentful Paint - when the first content appears' },
+  cls: { label: 'CLS', good: 0.1, poor: 0.25, unit: '', description: 'Cumulative Layout Shift - visual stability during load' },
+  tbt: { label: 'TBT', good: 200, poor: 600, unit: 'ms', description: 'Total Blocking Time - main thread blocked, affects interactivity' },
   si: { label: 'Speed Index', good: 3.4, poor: 5.8, unit: 's', description: 'How quickly content is visually displayed during load' },
 }
 
@@ -83,7 +83,7 @@ function vitalStatus(key: VitalKey, rawValue: string | null): 'good' | 'needs-im
   const meta = VITAL_META[key]
   const num = parseFloat(rawValue.replace(/[^0-9.]/g, ''))
   if (isNaN(num)) return 'unknown'
-  // CLS has no unit, rest are in s or ms — raw displayValue from lighthouse is already formatted
+  // CLS has no unit, rest are in s or ms - raw displayValue from lighthouse is already formatted
   if (num <= meta.good) return 'good'
   if (num <= meta.poor) return 'needs-improvement'
   return 'poor'
@@ -100,7 +100,7 @@ function vitalStatusLabel(status: ReturnType<typeof vitalStatus>) {
   if (status === 'good') return 'Good'
   if (status === 'needs-improvement') return 'Improve'
   if (status === 'poor') return 'Poor'
-  return '—'
+  return '-'
 }
 
 // ─── Fix suggestions ──────────────────────────────────────────────────────────
@@ -117,13 +117,13 @@ const FIX_HINTS: Record<string, string> = {
   'uses-text-compression': 'Enable gzip or Brotli compression on your server.',
   'uses-long-cache-ttl': 'Set Cache-Control headers to cache static assets for longer.',
   'server-response-time': 'Check server performance, hosting location, or add a CDN.',
-  'redirects': 'Remove unnecessary redirect chains — each adds latency.',
+  'redirects': 'Remove unnecessary redirect chains - each adds latency.',
   'bootup-time': 'Minify, defer, or split large JS bundles.',
   'mainthread-work-breakdown': 'Reduce JS parsing/execution time by splitting or deferring code.',
   'font-display': 'Add font-display: swap; to avoid invisible text during font load.',
   'critical-request-chains': 'Inline critical resources and reduce dependency depth.',
-  'dom-size': 'Simplify HTML — fewer nodes means faster rendering.',
-  'third-party-summary': 'Audit third-party scripts — remove or defer non-critical ones.',
+  'dom-size': 'Simplify HTML - fewer nodes means faster rendering.',
+  'third-party-summary': 'Audit third-party scripts - remove or defer non-critical ones.',
   'layout-shift-elements': 'Add explicit width/height to images and embeds to prevent shifts.',
   'uses-passive-event-listeners': 'Mark scroll/touch listeners as passive for smoother scrolling.',
   'image-size-responsive': 'Serve images that match the size they are displayed at.',
@@ -234,7 +234,7 @@ function VitalChip({ vitalKey, value }: { vitalKey: VitalKey; value: string | nu
         <span className="text-xs font-medium">{meta.label}</span>
         <Info className="size-3 opacity-60" />
       </div>
-      <span className="text-sm font-bold">{value ?? '—'}</span>
+      <span className="text-sm font-bold">{value ?? '-'}</span>
       <span className="text-xs opacity-70">{vitalStatusLabel(status)}</span>
       {showTip && (
         <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-52 rounded-lg bg-popover border border-border shadow-lg px-3 py-2 z-50 pointer-events-none">
@@ -357,11 +357,11 @@ function AuditResultView({ result, onRetry, url }: { result: AuditResult; onRetr
     const s = result.scores
     const v = result.webVitals
     const lines = [
-      `Lighthouse Audit — ${url}`,
+      `Lighthouse Audit - ${url}`,
       '',
       `Performance: ${s.performance}  Accessibility: ${s.accessibility}  Best Practices: ${s.bestPractices}  SEO: ${s.seo}`,
       '',
-      v ? `LCP: ${v.lcp ?? '—'}  FCP: ${v.fcp ?? '—'}  CLS: ${v.cls ?? '—'}  TBT: ${v.tbt ?? '—'}  SI: ${v.si ?? '—'}` : '',
+      v ? `LCP: ${v.lcp ?? '-'}  FCP: ${v.fcp ?? '-'}  CLS: ${v.cls ?? '-'}  TBT: ${v.tbt ?? '-'}  SI: ${v.si ?? '-'}` : '',
     ]
     navigator.clipboard.writeText(lines.filter(Boolean).join('\n'))
     setCopied(true)
@@ -537,8 +537,8 @@ function RunningState({ runningDesktop, runningMobile }: { runningDesktop: boole
     <div className="rounded-xl border border-border bg-card p-10 flex flex-col items-center gap-5 text-center">
       <Loader2 className="size-8 text-primary animate-spin" />
       <div>
-        <p className="text-sm font-medium text-foreground mb-1">Running parallel audits…</p>
-        <p className="text-xs text-muted-foreground">Both desktop and mobile are running simultaneously</p>
+        <p className="text-sm font-medium text-foreground mb-1">Running audits…</p>
+        <p className="text-xs text-muted-foreground">Desktop and mobile run in parallel</p>
       </div>
       <div className="flex items-center gap-6">
         {steps.map(step => (
@@ -803,9 +803,9 @@ function CompareView({ desktop, mobile, url, onRetry }: { desktop: AuditResult; 
               const ds = vitalStatus(key, dv)
               const ms = vitalStatus(key, mv)
               return [
-                <div key={`d-${key}`} className={cn('text-center text-sm font-bold rounded-lg py-1.5 border', vitalStatusColor(ds))}>{dv ?? '—'}</div>,
+                <div key={`d-${key}`} className={cn('text-center text-sm font-bold rounded-lg py-1.5 border', vitalStatusColor(ds))}>{dv ?? '-'}</div>,
                 <div key={`l-${key}`} className="text-xs text-muted-foreground text-center">{meta.label}</div>,
-                <div key={`m-${key}`} className={cn('text-center text-sm font-bold rounded-lg py-1.5 border', vitalStatusColor(ms))}>{mv ?? '—'}</div>,
+                <div key={`m-${key}`} className={cn('text-center text-sm font-bold rounded-lg py-1.5 border', vitalStatusColor(ms))}>{mv ?? '-'}</div>,
               ]
             })}
           </div>
@@ -827,7 +827,7 @@ function PageHeader({ version }: { version: string | null | undefined }) {
         )}
       </div>
       <p className="text-sm text-muted-foreground mt-1">
-        Audit any website for performance, accessibility, SEO and best practices — runs locally, no limits.
+        Audit any website for performance, accessibility, SEO, and best practices - runs locally, no limits.
       </p>
     </div>
   )

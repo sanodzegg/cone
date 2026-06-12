@@ -39,7 +39,7 @@ export default function Navigation() {
             localStorage.setItem(PRICING_DISMISSED_KEY, 'true')
             setPricingDismissed(true)
             setPricingDissolving(false)
-            toast('Pricing moved to the extension tab')
+            toast('Pricing now lives in the Extensions panel')
         }, 800)
     }
 

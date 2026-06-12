@@ -244,7 +244,7 @@ export default function BatchRename() {
           ) : preview.length > 0 ? (
             <>
               <p className="text-sm text-muted-foreground mb-3">
-                Preview — {changedCount} of {preview.length} will be renamed
+                Preview - {changedCount} of {preview.length} will be renamed
               </p>
               <div className="space-y-0">
                 {preview.map((item, i) => (

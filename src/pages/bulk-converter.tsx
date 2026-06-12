@@ -13,7 +13,7 @@ export default function BulkConverter() {
   const listRef = useRef<HTMLDivElement>(null)
   const prevFileCountRef = useRef(0)
 
-  // In watch mode files prepend — scroll to top so new items are visible
+  // In watch mode files prepend - scroll to top so new items are visible
   useEffect(() => {
     const count = state.files.length
     if (state.watching && count > prevFileCountRef.current && listRef.current) {
@@ -34,7 +34,7 @@ export default function BulkConverter() {
         <div>
           <h2 className="text-2xl font-body font-semibold text-foreground">Bulk Converter</h2>
           <p className="text-sm text-muted-foreground mt-1">
-            Convert all images in a folder recursively. Watch for new files automatically.
+            Convert every image in a folder, subfolders included. Watch mode converts new files as they appear.
           </p>
         </div>
         {(state.folderPath || hasDone) && (
@@ -72,7 +72,7 @@ export default function BulkConverter() {
                 )}
               </>
             ) : (
-              <p className="text-[10px] text-muted-foreground">Click to open folder picker</p>
+              <p className="text-[10px] text-muted-foreground">Click to choose a folder</p>
             )}
           </div>
 
@@ -172,7 +172,7 @@ export default function BulkConverter() {
           ) : (
             <div className="flex flex-col items-center justify-center h-64 rounded-xl border border-dashed border-border text-center gap-2">
               <p className="text-sm text-muted-foreground">
-                {state.scannedCount} images ready — configure settings and click Convert
+                {state.scannedCount} images ready to convert
               </p>
             </div>
           )}

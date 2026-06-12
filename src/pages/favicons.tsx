@@ -38,7 +38,7 @@ export default function FaviconConversion() {
             <div className="mb-6">
                 <h2 className="text-2xl font-body font-semibold text-foreground">Favicon Generator</h2>
                 <p className="text-sm text-muted-foreground mt-1">
-                    Upload any image and get a complete icon set — .ico + PNG at 16, 32, 48, 128, 256, 512 and 1024px.
+                    Upload any image and get the complete icon set - .ico, PNGs from 16 to 1024px, and macOS .icns.
                 </p>
             </div>
 
@@ -49,7 +49,7 @@ export default function FaviconConversion() {
             {state.status === 'converting' && (
                 <div className="flex flex-col items-center justify-center h-72 border border-border rounded-3xl border-dashed gap-4">
                     <div className="size-10 rounded-full border-2 border-primary border-t-transparent animate-spin" />
-                    <p className="text-sm text-muted-foreground">Generating icons...</p>
+                    <p className="text-sm text-muted-foreground">Generating icons…</p>
                 </div>
             )}
 

@@ -9,7 +9,7 @@ const PRICE_TO_PLAN: Record<string, string> = {
 // Reject signatures older than this to blunt replay attacks (Paddle ts is unix seconds).
 const MAX_SIGNATURE_AGE_SECONDS = 5 * 60
 
-// Length-independent constant-time string comparison — avoids leaking the HMAC via timing.
+// Length-independent constant-time string comparison - avoids leaking the HMAC via timing.
 function timingSafeEqual(a: string, b: string): boolean {
   if (a.length !== b.length) return false
   let mismatch = 0
@@ -23,7 +23,7 @@ async function verifySignature(rawBody: string, header: string, secret: string):
   const h1 = parts['h1']
   if (!ts || !h1) return false
 
-  // Freshness check first — a stale (or absurdly future) timestamp can't be a live event.
+  // Freshness check first - a stale (or absurdly future) timestamp can't be a live event.
   const tsNum = Number(ts)
   if (!Number.isFinite(tsNum) || Math.abs(Date.now() / 1000 - tsNum) > MAX_SIGNATURE_AGE_SECONDS) {
     return false

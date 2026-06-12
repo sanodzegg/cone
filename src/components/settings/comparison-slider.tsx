@@ -106,7 +106,7 @@ export default function ComparisonSlider({ quality, format = 'jpeg', imageSrc, o
     setPosition(Math.min(100, Math.max(0, ((clientX - rect.left) / rect.width) * 100)))
   }, [])
 
-  // Slider handle drag — takes priority, does not pan
+  // Slider handle drag - takes priority, does not pan
   const onSliderMouseDown = (e: React.MouseEvent) => {
     e.stopPropagation()
     sliderDragging.current = true
@@ -132,7 +132,7 @@ export default function ComparisonSlider({ quality, format = 'jpeg', imageSrc, o
     window.addEventListener('touchend', onEnd)
   }
 
-  // Container drag — pan when zoomed, otherwise move slider
+  // Container drag - pan when zoomed, otherwise move slider
   const onContainerMouseDown = (e: React.MouseEvent) => {
     if (zoom > 1) {
       panDragging.current = true

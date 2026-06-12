@@ -67,7 +67,7 @@ export default function FaviconResults({ result, sourceFile, onReset }: Props) {
             zip.file(`icon-${size}x${size}.png`, buf)
         }
 
-        // icns/ subfolder — rename files exactly as iconutil expects
+        // icns/ subfolder - rename files exactly as iconutil expects
         const bySize = Object.fromEntries(result.pngs.map(({ size, buf }) => [size, buf]))
         const icns = zip.folder('icns')!
         for (const { name, size } of ICNS_FILES) {

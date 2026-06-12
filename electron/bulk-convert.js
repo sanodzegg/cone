@@ -9,7 +9,7 @@ const sharpPath = app.isPackaged
 const sharp = require(sharpPath)
 
 // Mirror the formats this Sharp build can actually decode (see imageEngine.ts).
-// bmp is intentionally excluded — it isn't compiled into this libvips build, so
+// bmp is intentionally excluded - it isn't compiled into this libvips build, so
 // scanning it would only queue files that fail at conversion time.
 const IMAGE_EXTS = new Set(['.png', '.jpg', '.jpeg', '.jfif', '.webp', '.gif', '.tiff', '.tif', '.avif', '.svg'])
 
@@ -60,12 +60,12 @@ async function convertFile(srcPath, targetFormat, quality, outputMode, deleteOri
 
   // Skip if source and destination are the same file
   if (path.resolve(srcPath) === path.resolve(destPath)) {
-    throw new Error(`Source is already a .${targetFormat} — skipped`)
+    throw new Error(`Source is already a .${targetFormat} - skipped`)
   }
 
-  // Skip if output already exists — another source file with the same base name was already converted there
+  // Skip if output already exists - another source file with the same base name was already converted there
   if (!allowOverwrite && fs.existsSync(destPath)) {
-    throw new Error(`Output ${base}${ext} already exists — rename conflicting source files first`)
+    throw new Error(`Output ${base}${ext} already exists - rename conflicting source files first`)
   }
 
   const srcStat = fs.statSync(srcPath)
@@ -161,7 +161,7 @@ function registerBulkConvertHandlers(mainWindow) {
       if (!filename || eventType !== 'rename') return
       const fullPath = path.join(folderPath, filename)
 
-      // Deduplicate — fs.watch fires multiple events for a single file write
+      // Deduplicate - fs.watch fires multiple events for a single file write
       if (inProgress.has(fullPath)) return
       inProgress.add(fullPath)
 

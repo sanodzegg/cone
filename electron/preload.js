@@ -49,7 +49,7 @@ contextBridge.exposeInMainWorld('electron', {
   batchRenamePreview: (opts) => ipcRenderer.invoke('batch-rename-preview', opts),
   batchRenameApply: (opts) => ipcRenderer.invoke('batch-rename-apply', opts),
 
-  // Lighthouse (bundled — no install step)
+  // Lighthouse (bundled - no install step)
   lighthouseStatus: () => ipcRenderer.invoke('lighthouse-status'),
   lighthouseRun: (opts) => ipcRenderer.invoke('lighthouse-run', opts),
 

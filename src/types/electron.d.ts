@@ -20,7 +20,7 @@ interface BulkFileResult {
 declare interface Window {
   electron: {
     // Node Buffers come back over IPC as Uint8Array views over a regular ArrayBuffer
-    // (never SharedArrayBuffer), so they are valid BlobParts — pass them straight to new Blob([...]).
+    // (never SharedArrayBuffer), so they are valid BlobParts - pass them straight to new Blob([...]).
     convert: (buffer: ArrayBuffer, targetFormat: string, quality?: number, imageOptions?: { width?: number; height?: number; fit?: string; keepMetadata?: boolean }) => Promise<Uint8Array<ArrayBuffer>>
     convertDocument: (buffer: ArrayBuffer, targetFormat: string, sourceFormat: string) => Promise<Uint8Array<ArrayBuffer>>
     convertVideo: (buffer: ArrayBuffer, sourceExt: string, targetFormat: string, videoOptions?: { width?: number; height?: number; fit?: string }) => Promise<Uint8Array<ArrayBuffer>>
@@ -118,7 +118,7 @@ declare interface Window {
     openExternal: (url: string) => Promise<void>
     onOAuthCallback: (cb: (url: string) => void) => () => void
 
-    // Lighthouse (bundled — no install step)
+    // Lighthouse (bundled - no install step)
     lighthouseStatus: () => Promise<{ installed: boolean; version: string | null }>
     lighthouseRun: (opts: { url: string; strategy?: 'desktop' | 'mobile' }) => Promise<{
       success: boolean

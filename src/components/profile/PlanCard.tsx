@@ -11,25 +11,25 @@ const PLAN_CONFIG: Record<Plan, { label: string; icon: typeof Clock; color: stri
         label: 'Trial',
         icon: Clock,
         color: 'text-muted-foreground',
-        description: 'Limited conversions included. Upgrade for unlimited access.',
+        description: '100 free tokens to try everything. Upgrade for unlimited conversions.',
     },
     limited: {
-        label: 'Limited',
+        label: 'Free',
         icon: Timer,
         color: 'text-muted-foreground',
-        description: 'Daily conversion limits. Upgrade for unlimited access.',
+        description: '50 tokens a day, refreshed every 24 hours. Upgrade for unlimited conversions.',
     },
     monthly: {
-        label: 'Pro — Monthly',
+        label: 'Pro - Monthly',
         icon: Zap,
         color: 'text-primary',
         description: 'Unlimited conversions, billed monthly.',
     },
     annual: {
-        label: 'Pro — Annual',
+        label: 'Pro - Annual',
         icon: Zap,
         color: 'text-primary',
-        description: 'Unlimited conversions, billed annually. You save 20%.',
+        description: 'Unlimited conversions, billed annually. You save 25%.',
     },
     lifetime: {
         label: 'Lifetime',
@@ -79,7 +79,7 @@ export function PlanCard({ plan, subscriptionEnd }: PlanCardProps) {
                             "text-xs font-medium px-2 py-0.5 rounded-full",
                             isFree ? "bg-foreground/10 text-muted-foreground" : "bg-primary/10 text-primary"
                         )}>
-                            {isFree ? 'Free' : 'Active'}
+                            {plan === 'limited' ? 'Daily' : isFree ? 'Free' : 'Active'}
                         </span>
                     </div>
                     <p className="text-sm text-muted-foreground mt-0.5">{config.description}</p>
@@ -110,7 +110,7 @@ export function PlanCard({ plan, subscriptionEnd }: PlanCardProps) {
                         )}
                         {cancelStep === 'confirm' && (
                             <div className="flex flex-col gap-2 w-full">
-                                <p className="text-sm text-muted-foreground">Access continues until {formattedEnd}. After that you'll move to the limited plan.</p>
+                                <p className="text-sm text-muted-foreground">Access continues until {formattedEnd}. After that you'll move to the free plan - 50 tokens a day.</p>
                                 <div className="flex gap-2">
                                     <Button variant="outline" size="sm" onClick={() => setCancelStep('idle')}>Keep plan</Button>
                                     <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive hover:bg-destructive/10" onClick={handleCancel}>Confirm cancel</Button>
@@ -125,14 +125,14 @@ export function PlanCard({ plan, subscriptionEnd }: PlanCardProps) {
                         )}
                         {cancelStep === 'error' && (
                             <div className="flex items-center gap-2">
-                                <p className="text-sm text-destructive">Something went wrong.</p>
+                                <p className="text-sm text-destructive">Cancellation failed.</p>
                                 <Button variant="ghost" size="sm" onClick={() => setCancelStep('idle')}>Try again</Button>
                             </div>
                         )}
                     </>
                 )}
                 {plan === 'lifetime' && (
-                    <p className="text-xs text-muted-foreground">No action needed — you own Conesoft forever.</p>
+                    <p className="text-xs text-muted-foreground">No action needed - you own Conesoft forever.</p>
                 )}
             </div>
         </div>

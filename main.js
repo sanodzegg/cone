@@ -86,7 +86,7 @@ app.on('open-url', (event, url) => {
   }
 })
 
-// Handle OAuth deep link callback (Windows — second instance)
+// Handle OAuth deep link callback (Windows - second instance)
 app.on('second-instance', (_event, argv) => {
   const url = argv.find(arg => arg.startsWith('conesoft://'))
   if (url && mainWindow && !mainWindow.isDestroyed()) {
@@ -98,7 +98,7 @@ app.on('second-instance', (_event, argv) => {
 
 // Only the primary instance boots a window. A second instance already called app.quit()
 // above; guarding here ensures app.whenReady() can't still fire createWindow() for it and
-// flash a stray window (the exact case single-instance matters — OAuth deep-link relaunch).
+// flash a stray window (the exact case single-instance matters - OAuth deep-link relaunch).
 if (gotLock) {
   app.whenReady().then(() => {
     createWindow()

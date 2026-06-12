@@ -95,10 +95,10 @@ export default function File({ data }: { data: File }) {
                                 <TooltipContent>
                                     <p className="text-sm">
                                         {sizeIncreaseWarning
-                                            ? `Quality ${effectiveQuality}% is near-lossless on a lossless source — lower quality for a smaller file`
+                                            ? `Quality ${effectiveQuality}% is near-lossless on a lossless source - lower quality for a smaller file`
                                             : learned
                                                 ? 'Estimated from your previous conversions'
-                                                : 'Rough estimate — improves as you convert'
+                                                : 'Rough estimate - improves as you convert'
                                         }
                                     </p>
                                 </TooltipContent>

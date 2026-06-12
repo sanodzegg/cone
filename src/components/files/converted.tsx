@@ -82,7 +82,7 @@ export default function ConvertedFiles() {
     const hasSuspiciousSavings = savedPercent !== null && (hasSameFormatReencode || hasHighSavingsAtHighQuality)
     const suspiciousReason = hasSameFormatReencode
         ? 'Some files were re-encoded to the same format. Any size change comes from metadata removal or compression re-optimization.'
-        : 'Savings above 50% at high quality are unusual. This likely means the originals had heavy metadata or inefficient encoding — not quality loss.'
+        : 'Savings above 50% at high quality are unusual. This likely means the originals had heavy metadata or inefficient encoding - not quality loss.'
 
     if (convertingTotal === 0) return null
 

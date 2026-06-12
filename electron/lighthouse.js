@@ -3,7 +3,7 @@ const path = require('path')
 const fs = require('fs')
 
 // Lighthouse is bundled as a regular dependency and runs in-process (via a utility
-// process) against the bundled Playwright Chromium. No runtime npm install — the old
+// process) against the bundled Playwright Chromium. No runtime npm install - the old
 // design spawned `npm install lighthouse` into userData, which crashed in packaged
 // builds (GUI apps don't get the shell PATH, so npm was never found). Lighthouse now
 // updates with normal app releases.

@@ -59,7 +59,7 @@ async function fetchAndSetPlan(u: User) {
     useAuthStore.setState({ user: u, plan, subscriptionEnd, loading: false })
 }
 
-// Listen for manual DB edits to users.plan via Realtime — Supabase is authoritative
+// Listen for manual DB edits to users.plan via Realtime - Supabase is authoritative
 let planChannel: ReturnType<typeof supabase.channel> | null = null
 
 function subscribeToPlanChanges(userId: string) {

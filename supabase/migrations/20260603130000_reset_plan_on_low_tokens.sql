@@ -4,7 +4,7 @@
 -- fires regardless of which client (if any) is online.
 --
 -- The `subscription_end IS NULL` guard preserves the churned-subscriber protection: a user
--- who has ever held a subscription is NOT resurrected to a fresh trial — they stay 'limited'.
+-- who has ever held a subscription is NOT resurrected to a fresh trial - they stay 'limited'.
 -- (So a test user with a non-null subscription_end will intentionally NOT revert.)
 --
 -- NOTE: the 100 below must match TRIAL_TOKEN_LIMIT in src/lib/useConversionCount.ts.

@@ -19,7 +19,7 @@ export default function DefaultOutputFolder() {
             </div>
             <div className="flex items-center gap-2">
                 <div className="flex-1 min-w-0 rounded-lg border border-border bg-background px-3 py-2 text-xs 2xl:text-sm text-muted-foreground truncate">
-                    {defaultOutputFolder ?? 'Not set — saves alongside originals'}
+                    {defaultOutputFolder ?? 'Not set - saves alongside originals'}
                 </div>
                 <Button variant="outline" size="sm" className="gap-1.5 2xl:text-sm 2xl:h-9 shrink-0" onClick={pickFolder}>
                     <FolderOpen className="size-3.5 2xl:size-4" />

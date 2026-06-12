@@ -11,7 +11,7 @@ export type DrawCommand =
 
 export function useDrawCommands() {
   const [commands, setCommands_internal] = useState<DrawCommand[]>([])
-  // Active stroke lives in a ref — never stale in mousemove callbacks
+  // Active stroke lives in a ref - never stale in mousemove callbacks
   const currentRef = useRef<DrawCommand | null>(null)
   const [currentSnapshot, setCurrentSnapshot] = useState<DrawCommand | null>(null)
 

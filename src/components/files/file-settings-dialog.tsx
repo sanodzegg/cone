@@ -79,7 +79,7 @@ export default function FileSettingsDialog({ file }: { file: File }) {
     const [quality, setQuality] = useState<number>(fileSettings?.quality ?? imageQuality)
 
     const [srcDims, setSrcDims] = useState<{ w: number; h: number } | null>(null)
-    // which field the user last explicitly typed into — the other becomes auto-computed
+    // which field the user last explicitly typed into - the other becomes auto-computed
     const [lastEdited, setLastEdited] = useState<'width' | 'height' | null>(null)
 
     const syncFromStore = () => {
@@ -182,7 +182,7 @@ export default function FileSettingsDialog({ file }: { file: File }) {
                 </DialogHeader>
 
                 <div className="space-y-5 2xl:space-y-6">
-                    {/* Resize — image + video */}
+                    {/* Resize - image + video */}
                     {(isImage || isVideo) && (
                         <>
                             <div className="space-y-2">
@@ -273,7 +273,7 @@ export default function FileSettingsDialog({ file }: { file: File }) {
                         </>
                     )}
 
-                    {/* Quality — image only, not for GIF (no quality control) */}
+                    {/* Quality - image only, not for GIF (no quality control) */}
                     {isImage && fileSettings?.targetFormat !== 'gif' && (
                         <div className="space-y-2">
                             <div className="flex items-center justify-between">
@@ -296,20 +296,20 @@ export default function FileSettingsDialog({ file }: { file: File }) {
                                 className="w-full"
                             />
                             {fileSettings?.targetFormat === 'png' && (
-                                <p className="text-xs text-muted-foreground">Higher = larger file, faster. Lower = smaller file, slower.</p>
+                                <p className="text-xs text-muted-foreground">Always lossless - more compression means a smaller file, slower encode.</p>
                             )}
                             {fileSettings?.targetFormat === 'webp' && quality >= 100 && (
-                                <p className="text-xs text-muted-foreground">Lossless mode — no quality loss, possible larger file.</p>
+                                <p className="text-xs text-muted-foreground">Lossless mode - no quality loss, possible larger file.</p>
                             )}
                         </div>
                     )}
 
-                    {/* Keep Metadata — image only */}
+                    {/* Keep Metadata - image only */}
                     {isImage && (
                         <div className="flex items-center justify-between">
                             <div>
                                 <p className="text-sm 2xl:text-base font-medium text-primary">Keep Metadata</p>
-                                <p className="text-xs 2xl:text-sm text-muted-foreground">Preserve EXIF, ICC profiles, etc.</p>
+                                <p className="text-xs 2xl:text-sm text-muted-foreground">Preserve EXIF and ICC color profiles</p>
                             </div>
                             <button
                                 role="checkbox"

@@ -43,7 +43,7 @@ export default function Dropbox() {
         if (!incoming) return
         const arr = Array.from(incoming)
         receiveFiles(arr)
-        // After receiveFiles, the store updates synchronously via Zustand set —
+        // After receiveFiles, the store updates synchronously via Zustand set -
         // but we can't read the new state here. Instead, compare what we tried to
         // add vs what the store will accept by checking duplicates ourselves.
         const existingKeys = new Set(existingFiles.map(f => `${f.name}-${f.size}-${f.lastModified}`))
@@ -78,7 +78,7 @@ export default function Dropbox() {
 
                     <div className="text-center">
                         <h2 className="text-2xl 2xl:text-3xl font-body font-semibold text-foreground">Drop files here</h2>
-                        <p className="text-sm 2xl:text-base text-muted-foreground mt-1">{allLimited ? 'All conversion limits reached' : 'or browse from your computer'}</p>
+                        <p className="text-sm 2xl:text-base text-muted-foreground mt-1">{allLimited ? 'Out of tokens for today - they refresh in 24 hours' : 'or browse from your computer'}</p>
                     </div>
 
                     <div className="flex flex-col items-center gap-3 w-full max-w-lg 2xl:max-w-xl px-8">

@@ -101,7 +101,7 @@ export default function AnnotationEditor({ file }: { file: PdfFile }) {
   const [color, setColor] = useState('#FFFF00')
   const [strokeWidth, setStrokeWidth] = useState(4)
 
-  // History for undo — array of per-page annotation snapshots
+  // History for undo - array of per-page annotation snapshots
   const history = useRef<Record<number, Annotation[]>[]>([])
 
   const docRef = useRef<PDFDocumentProxy | null>(null)
@@ -245,7 +245,7 @@ export default function AnnotationEditor({ file }: { file: PdfFile }) {
         <span className="text-sm text-muted-foreground flex-1">
           {totalAnnotations > 0
             ? `${totalAnnotations} annotation${totalAnnotations !== 1 ? 's' : ''}`
-            : 'No annotations yet — pick a tool and draw on a page'}
+            : 'No annotations yet - pick a tool and draw on a page'}
         </span>
         <button
           onClick={undo}

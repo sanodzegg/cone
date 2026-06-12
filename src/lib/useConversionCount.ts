@@ -27,7 +27,7 @@ export const TOKEN_COSTS: Record<EngineType, number> = {
 
 // Cost used to value pre-token historical usage at migration/backfill time. Kept at the
 // OLD flat rate (image 1, others 5) so existing users' standing doesn't shift when the
-// heavier media costs land — the new costs apply only to new conversions. Mirrors the
+// heavier media costs land - the new costs apply only to new conversions. Mirrors the
 // SQL backfill in migrations/20260603120000_add_tokens_used.sql.
 const BACKFILL_COSTS: Record<EngineType, number> = {
     image: 1,
@@ -57,7 +57,7 @@ function getDailyLocal(): DailyTokens {
         const raw = localStorage.getItem(DAILY_STORAGE_KEY)
         if (!raw) return freshDaily()
         const parsed = JSON.parse(raw)
-        // Old per-category daily format (pre-tokens) has no numeric `tokens` — start fresh.
+        // Old per-category daily format (pre-tokens) has no numeric `tokens` - start fresh.
         if (typeof parsed.tokens !== 'number' || typeof parsed.resetAt !== 'number') {
             const fresh = freshDaily()
             localStorage.setItem(DAILY_STORAGE_KEY, JSON.stringify(fresh))
@@ -122,7 +122,7 @@ function setLocal(next: LocalCounts) {
         counts: { image: next.image, document: next.document, video: next.video, audio: next.audio },
         tokensUsed: next.tokensUsed,
     })
-    // If tokens dropped back below the trial cap (e.g. admin refund), the daily bucket is stale — clear it.
+    // If tokens dropped back below the trial cap (e.g. admin refund), the daily bucket is stale - clear it.
     // The limited→trial plan flip itself is handled server-side now (DB trigger reset_plan_on_low_tokens),
     // and propagates back to the app via the users-table Realtime subscription in useAuthStore.
     if (prev.tokensUsed >= TRIAL_TOKEN_LIMIT && next.tokensUsed < TRIAL_TOKEN_LIMIT) {
@@ -172,17 +172,17 @@ function isSelfEcho(updatedAt: string | undefined): boolean {
 }
 
 // Spend tokens for one conversion (reserved up front). Free tiers (trial + limited) draw from
-// the lifetime trial budget FIRST, then spill the remainder into the daily allowance — so a
+// the lifetime trial budget FIRST, then spill the remainder into the daily allowance - so a
 // single conversion can straddle the boundary (e.g. at 93/100 an 8-token job uses 7 trial + 1
 // daily → daily 1/50). tokensUsed therefore tops out at TRIAL_TOKEN_LIMIT and represents trial
 // budget consumed; the daily bucket holds today's overflow/limited spend; per-category counts
 // record every conversion regardless. Synchronous localStorage RMW → parallel-safe. Returns
 // [refund, reserved]; reserved=false means the combined free budget can't cover it. Paid plans
-// are ungated. Call refund() if the conversion later fails — it reverses the exact split taken.
+// are ungated. Call refund() if the conversion later fails - it reverses the exact split taken.
 export function spendTokens(engine: EngineType, plan: string): [() => void, boolean] {
     const cost = TOKEN_COSTS[engine]
 
-    // Paid plans: ungated — just record the per-category analytics count.
+    // Paid plans: ungated - just record the per-category analytics count.
     if (plan !== 'trial' && plan !== 'limited') {
         const local = getLocal()
         local[engine] += 1

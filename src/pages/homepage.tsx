@@ -24,7 +24,7 @@ export default function Homepage() {
       <div className="mb-6 2xl:mb-8">
         <h2 className="text-2xl 2xl:text-3xl font-body font-semibold text-foreground">Convert anything, instantly.</h2>
         <p className="text-sm 2xl:text-base text-muted-foreground mt-1">
-          Images, videos, documents — drag in a file and get it back in the format you need.
+          Images, video, audio, documents - converted on your device, never uploaded.
         </p>
       </div>
       <Dropbox />

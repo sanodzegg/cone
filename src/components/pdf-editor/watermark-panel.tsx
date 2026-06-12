@@ -116,7 +116,7 @@ export default function WatermarkPanel({ file }: { file: PdfFile }) {
               </div>
             </div>
             <div className="flex flex-col gap-2 flex-1">
-              <Label>Font size — {fontSize}px</Label>
+              <Label>Font size - {fontSize}px</Label>
               <Slider
                 value={[fontSize]}
                 min={12}
@@ -169,7 +169,7 @@ export default function WatermarkPanel({ file }: { file: PdfFile }) {
 
           {/* Scale */}
           <div className="flex flex-col gap-2">
-            <Label>Scale — {scale}%</Label>
+            <Label>Scale - {scale}%</Label>
             <Slider value={[scale]} min={5} max={100} step={5} onValueChange={(v) => setScale(Array.isArray(v) ? v[0] : v)} />
           </div>
         </>
@@ -177,7 +177,7 @@ export default function WatermarkPanel({ file }: { file: PdfFile }) {
 
       {/* Opacity (shared) */}
       <div className="flex flex-col gap-2">
-        <Label>Opacity — {opacity}%</Label>
+        <Label>Opacity - {opacity}%</Label>
         <Slider value={[opacity]} min={5} max={100} step={5} onValueChange={(v) => setOpacity(Array.isArray(v) ? v[0] : v)} />
       </div>
 

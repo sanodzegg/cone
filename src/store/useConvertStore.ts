@@ -38,7 +38,7 @@ export const useConvertStore = create<ConvertStore>()(
         conversionRatios: state.conversionRatios,
         autoDownloadEnabled: state.autoDownloadEnabled,
         autoDownloadFolder: state.autoDownloadFolder,
-        // pendingEditorFile intentionally excluded — File objects can't be serialized
+        // pendingEditorFile intentionally excluded - File objects can't be serialized
       }),
     }
   )

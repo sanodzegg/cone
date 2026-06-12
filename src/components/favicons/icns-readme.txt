@@ -11,7 +11,7 @@ This folder contains your PNG files already renamed to the exact format that mac
 ## Steps
 
 1. Rename this folder from "icns" to "icon.iconset"
-   The folder name must end in .iconset — this is required by iconutil.
+   The folder name must end in .iconset - this is required by iconutil.
 
 2. Open Terminal and run:
    iconutil -c icns icon.iconset
@@ -32,7 +32,7 @@ macOS uses a 1x/2x system for HiDPI (Retina) displays. The @2x file is simply th
    icon_512x512.png    → 512px
    icon_512x512@2x.png → 1024px file renamed
 
-All files in this folder are already named correctly — no renaming needed.
+All files in this folder are already named correctly - no renaming needed.
 
 ## Full example
    mv icns icon.iconset

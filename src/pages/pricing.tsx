@@ -30,16 +30,14 @@ const PLANS = [
         id: 'trial',
         icon: Clock,
         title: 'Trial',
-        description: 'Free to get started',
+        description: 'Try everything, on us',
         price: 0,
         features: [
-            '200 image conversions',
-            '150 document conversions',
-            '50 video conversions',
-            'All output formats included',
+            '100 tokens to start',
+            'Images 1 · documents 5 · audio 6 · video 8 tokens',
+            'All conversion types & output formats',
             'Image editor & canvas tools',
-            'Favicon generator',
-            'SVG editor',
+            'Favicon generator & SVG editor',
         ],
         ctaLabel: 'Get started',
         ctaVariant: 'outline' as const,
@@ -47,17 +45,15 @@ const PLANS = [
     {
         id: 'limited',
         icon: Timer,
-        title: 'Limited',
-        description: 'Free with daily limits',
+        title: 'Free',
+        description: 'Keep converting, every day',
         price: 0,
         features: [
-            '20 image conversions / day',
-            '15 document conversions / day',
-            '5 video conversions / day',
-            'Resets every 24 hours',
+            '50 tokens every day',
+            'Refreshes every 24 hours',
+            'All conversion types & output formats',
             'Image editor & canvas tools',
-            'Favicon generator',
-            'SVG editor',
+            'Favicon generator & SVG editor',
         ],
         ctaLabel: 'Upgrade to Pro',
         ctaVariant: 'outline' as const,
@@ -66,13 +62,13 @@ const PLANS = [
         id: 'pro',
         icon: Zap,
         title: 'Pro',
-        description: 'Billed monthly or annually',
+        description: 'No tokens, no counting',
         price: { monthly: 8, annual: 6 },
         priceSuffix: '/mo',
         features: [
-            'Unlimited conversions — no caps',
-            'Bulk convert entire folders at once',
-            'Watch folder, auto-convert on save',
+            'Unlimited conversions - no tokens',
+            'Bulk convert entire folders',
+            'Watch folders - convert new files automatically',
             'Image editor & canvas tools',
             'Favicon generator & SVG editor',
             'Settings sync across devices',
@@ -85,11 +81,11 @@ const PLANS = [
         id: 'lifetime',
         icon: Star,
         title: 'Lifetime',
-        description: 'Pay once, own it forever.',
+        description: 'Pay once, own it forever',
         price: 110,
         features: [
             'Everything in Pro, forever',
-            'One-time payment, no renewals',
+            'One payment - no renewals',
             'All future updates included',
             'Works fully offline',
         ],
@@ -131,7 +127,7 @@ export default function Pricing() {
                 />
                 <div className="relative z-10 mb-10 2xl:mb-14 text-center">
                     <h2 className="text-4xl 2xl:text-5xl font-body font-semibold text-foreground mb-3 2xl:mb-4">Simple, transparent pricing</h2>
-                    <p className="text-sm 2xl:text-base text-muted-foreground">No subscriptions required. Start free, upgrade when you need more.</p>
+                    <p className="text-sm 2xl:text-base text-muted-foreground">Start free. Upgrade when you need more - or pay once and keep it forever.</p>
                 </div>
                 <div className="relative z-10 grid grid-cols-3 gap-4 2xl:gap-6 items-center">
                     {PLANS.filter(p => showLimited ? p.id !== 'trial' : p.id !== 'limited').map(p => {

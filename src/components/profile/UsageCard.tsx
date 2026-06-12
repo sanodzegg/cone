@@ -69,7 +69,7 @@ export function UsageCard({ plan, counts }: UsageCardProps) {
                 <p className="text-sm font-medium text-muted-foreground uppercase tracking-wide">Usage</p>
                 <div className="space-y-1.5">
                     <div className="flex items-center justify-between">
-                        <p className="text-sm text-muted-foreground">Credits used</p>
+                        <p className="text-sm text-muted-foreground">Trial tokens used</p>
                         <p className="text-sm text-foreground tabular-nums">{tokensUsed} / {TRIAL_TOKEN_LIMIT}</p>
                     </div>
                     <UsageBar pct={(tokensUsed / TRIAL_TOKEN_LIMIT) * 100} nearAt={85} fullAt={100} />
@@ -80,7 +80,7 @@ export function UsageCard({ plan, counts }: UsageCardProps) {
                             <p className="text-sm text-muted-foreground flex items-center gap-1.5">
                                 <Icon className="size-4" />
                                 {label}
-                                <span className="text-xs">· {TOKEN_COSTS[engine]} cr each</span>
+                                <span className="text-xs">· {TOKEN_COSTS[engine]} tokens each</span>
                             </p>
                             <p className="text-sm text-foreground tabular-nums">{counts[engine]}</p>
                         </div>
@@ -90,7 +90,7 @@ export function UsageCard({ plan, counts }: UsageCardProps) {
         )
     }
 
-    // paid plans — lifetime stats
+    // paid plans - lifetime stats
     return (
         <div className="rounded-2xl border border-border p-5 space-y-3">
             <p className="text-sm font-medium text-muted-foreground uppercase tracking-wide">Usage</p>

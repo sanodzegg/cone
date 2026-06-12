@@ -135,7 +135,7 @@ export default function SvgEditor() {
     const fileSize = useMemo(() => byteSize(activeCode), [activeCode])
 
     // Deselect element when code changes externally (e.g. Optimize, Prettify)
-    // but not when we ourselves just patched a color — handled in handleColorChange
+    // but not when we ourselves just patched a color - handled in handleColorChange
     const selectedColorInfo = selectedColorIdx !== null
         ? getElementColor(activeCode, selectedColorIdx)
         : null
@@ -172,7 +172,7 @@ export default function SvgEditor() {
             }
             target = target.parentElement
         }
-        // Clicked on background — deselect
+        // Clicked on background - deselect
         setSelectedColorIdx(null)
     }, [])
 
@@ -192,7 +192,7 @@ export default function SvgEditor() {
                 <div className="mb-6">
                     <h2 className="text-2xl font-body font-semibold text-foreground">SVG Editor</h2>
                     <p className="text-sm text-muted-foreground mt-1">
-                        Upload or paste an SVG to preview, export code snippets, and generate Data URIs.
+                        Edit, optimize, and preview SVGs - export as React, Vue, Angular, or data URIs.
                     </p>
                 </div>
                 <SvgDropzone onSvg={loadCode} />
@@ -206,7 +206,7 @@ export default function SvgEditor() {
                 <div>
                     <h2 className="text-2xl font-body font-semibold text-foreground">SVG Editor</h2>
                     <p className="text-sm text-muted-foreground mt-1">
-                        Upload or paste an SVG to preview, export code snippets, and generate Data URIs.
+                        Edit, optimize, and preview SVGs - export as React, Vue, Angular, or data URIs.
                     </p>
                 </div>
                 <Button variant="outline" size="sm" onClick={() => setCode(null)}>

@@ -59,7 +59,7 @@ export function TabBgRemove({ status, progress, onRemove, onCancel }: Props) {
       )}
 
       {status === 'done' && (
-        <p className="text-xs text-green-500">Background removed successfully.</p>
+        <p className="text-xs text-green-500">Background removed.</p>
       )}
     </div>
   )

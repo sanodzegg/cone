@@ -40,22 +40,21 @@ export async function convertSingle(file: File, deps: ConversionDeps): Promise<v
 async function convertFile(file: File, filePlan: string, deps: ConversionDeps): Promise<void> {
   const engine = getEngineForFile(file)
   if (!engine) {
-    deps.setFailedFile(file, 'No engine available for this file type')
+    deps.setFailedFile(file, 'Unsupported file type')
     return
   }
 
   const limitType = toEngineType(engine.id)
 
-  // Reserve slot upfront for all plan types — plan is already resolved per-file
+  // Reserve slot upfront for all plan types - plan is already resolved per-file
   // before dispatch so parallel conversions use the correct bucket.
   let refund = () => {}
   if (limitType) {
     const [r, reserved] = spendTokens(limitType, filePlan)
     if (!reserved) {
-      const label = limitType.charAt(0).toUpperCase() + limitType.slice(1)
       const msg = filePlan === 'limited' || isTrialExhausted()
-        ? `${label} daily limit reached. Try again tomorrow or upgrade to Pro.`
-        : `${label} conversion limit reached. Upgrade to continue.`
+        ? 'Not enough tokens left today. They refresh tomorrow - or upgrade to Pro.'
+        : 'Not enough trial tokens left. Upgrade to keep converting.'
       deps.setFailedFile(file, msg)
       return
     }
@@ -118,7 +117,7 @@ export async function convertAll(files: File[], deps: ConversionDeps): Promise<v
 
   // Pre-flight (free tiers): simulate the trial→daily spill so we can skip files the combined
   // budget can't cover and show one clear toast instead of per-file errors. spendTokens drains
-  // the lifetime trial budget first, then spills the remainder into the daily allowance — a
+  // the lifetime trial budget first, then spills the remainder into the daily allowance - a
   // single conversion can straddle the boundary (e.g. 7 trial + 1 daily). Mid-batch trial
   // exhaustion is handled by onConversionSuccess (main.tsx) once tokens_used hits the cap.
   const blockedByDaily = new Set<File>()
@@ -142,9 +141,9 @@ export async function convertAll(files: File[], deps: ConversionDeps): Promise<v
 
   if (blockedByDaily.size > 0) {
     const n = blockedByDaily.size
-    toast.warning(`${n} file${n !== 1 ? 's' : ''} skipped — daily limit reached`, {
+    toast.warning(`${n} file${n !== 1 ? 's' : ''} skipped - not enough tokens today`, {
       description: createElement('span', null,
-        'These files will be available again tomorrow. ',
+        'Your daily tokens refresh tomorrow. ',
         createElement('button', {
           onClick: () => deps.onNavigateToPricing?.(),
           style: { textDecoration: 'underline', cursor: 'pointer' },
@@ -153,7 +152,7 @@ export async function convertAll(files: File[], deps: ConversionDeps): Promise<v
       duration: 6000,
     })
     for (const f of blockedByDaily) {
-      deps.setFailedFile(f, 'Daily limit reached. Try again tomorrow or upgrade to Pro.')
+      deps.setFailedFile(f, 'Not enough tokens left today. They refresh tomorrow - or upgrade to Pro.')
     }
   }
 

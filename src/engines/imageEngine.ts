@@ -13,15 +13,15 @@ export const IMAGE_INPUT_EXTENSIONS = [
 ]
 export const IMAGE_OUTPUT_FORMATS = ['webp', 'png', 'jpg', 'avif', 'gif', 'tiff']
 
-// Formats NOT supported by this sharp build — future work:
+// Formats NOT supported by this sharp build - future work:
 // RAW camera: 3fr, arw, cr2, cr3, crw, dcr, dng, erf, mos, mrw, nef, orf, pef, raf, raw, rw2, x3f
 //   → requires dcraw/libraw compiled into libvips, or a separate dcraw binary
 // Raster editors: psd, psb (Photoshop), xcg (GIMP), tga
 //   → no viable pure-JS parser; would need ImageMagick or native binding
 // Office/vector: eps, ps (Ghostscript), odg, odd (LibreOffice), pub (Publisher), xps
 //   → requires system-level tools, not bundleable
-// Platform icons: icns (macOS), ico (input) — ico output works via favicon generator
-// Other: ppm, bmp — not compiled into this sharp build
+// Platform icons: icns (macOS), ico (input) - ico output works via favicon generator
+// Other: ppm, bmp - not compiled into this sharp build
 
 export const imageEngine: ConversionEngine = {
   id: 'image',
@@ -37,7 +37,7 @@ export const imageEngine: ConversionEngine = {
       fit: options.fit,
       keepMetadata: options.keepMetadata,
     })
-    // result is a Uint8Array over IPC; pass it directly — `.buffer` could include
+    // result is a Uint8Array over IPC; pass it directly - `.buffer` could include
     // bytes outside the view if it ever arrives with a non-zero byteOffset.
     return new Blob([result], { type: `image/${targetFormat}` })
   },

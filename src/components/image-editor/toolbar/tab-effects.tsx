@@ -41,7 +41,7 @@ export function TabEffects({ adjustments, activePreset, onChange, onPresetSelect
         })}
       </div>
       <p className="text-xs text-muted-foreground pt-1">
-        Presets apply to the Adjust tab — tweak values there after applying.
+        Presets apply to the Adjust tab - tweak values there after applying.
       </p>
     </div>
   )

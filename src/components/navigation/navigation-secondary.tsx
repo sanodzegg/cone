@@ -95,7 +95,7 @@ const extensions: Extension[] = [
             },
             {
                 title: 'Image Compression',
-                description: 'Compress images with before/after size comparison',
+                description: 'Compress images with a live before/after preview',
                 href: '/extensions/image-compression',
                 icon: <Zap className="size-5" />,
                 proOnly: true,
@@ -109,13 +109,13 @@ const extensions: Extension[] = [
             },
             {
                 title: 'SVG Editor',
-                description: 'Preview, optimize, and export SVGs as code or Data URI',
+                description: 'Edit, optimize, and export SVGs as code or data URIs',
                 href: '/extensions/svg-editor',
                 icon: <PenLine className="size-5" />,
             },
             {
                 title: 'Favicon Generator',
-                description: 'Generate a full favicon set from any image',
+                description: 'Generate a complete icon set from one image',
                 href: '/extensions/favicon',
                 icon: <Globe className="size-5" />,
             },
@@ -128,7 +128,7 @@ const extensions: Extension[] = [
         children: [
             {
                 title: 'Bulk Converter',
-                description: 'Convert all images in a folder recursively',
+                description: 'Convert every image in a folder, subfolders included',
                 href: '/extensions/bulk-converter',
                 icon: <FolderInput className="size-5" />,
                 proOnly: true,
@@ -156,7 +156,7 @@ const extensions: Extension[] = [
             },
             {
                 title: 'Download as PDF',
-                description: 'Save any webpage as a PDF file',
+                description: 'Save any webpage as a PDF',
                 href: '/extensions/website-pdf',
                 icon: <FileDown className="size-5" />,
                 requiresInternet: true,
@@ -164,7 +164,7 @@ const extensions: Extension[] = [
             },
             {
                 title: 'Lighthouse Audit',
-                description: 'Audit performance, accessibility, SEO and best practices',
+                description: 'Audit performance, accessibility, SEO, and best practices',
                 href: '/extensions/lighthouse',
                 icon: <Gauge className="size-5" />,
                 requiresInternet: true,
@@ -179,7 +179,7 @@ const extensions: Extension[] = [
         children: [
             {
                 title: 'PDF Editor',
-                description: 'Reorder, rotate, annotate and watermark PDF pages',
+                description: 'Reorder, rotate, annotate, and watermark pages',
                 href: '/extensions/pdf-editor',
                 icon: <FileEdit className="size-5" />,
             },

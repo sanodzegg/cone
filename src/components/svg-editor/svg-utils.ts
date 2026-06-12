@@ -282,7 +282,7 @@ export default SVGComponent`
 </template>
 
 <script setup lang="ts">
-// Drop this component anywhere — attrs (class, style, etc.) pass through automatically
+// Drop this component anywhere - attrs (class, style, etc.) pass through automatically
 </script>`
         }
 

@@ -47,8 +47,8 @@ function App() {
       : `${successCount} file${successCount !== 1 ? 's' : ''} converted successfully.`
     window.electron.showNotification('Conversion complete', body)
     if (failed > 0) {
-      toast.error(`${failed} file${failed !== 1 ? 's' : ''} failed — slots returned`, {
-        description: 'Those conversions were not counted against your limit.',
+      toast.error(`${failed} file${failed !== 1 ? 's' : ''} failed - tokens refunded`, {
+        description: "Failed conversions don't cost tokens.",
         duration: 5000,
       })
     }

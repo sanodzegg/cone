@@ -79,7 +79,7 @@ export default function WebsiteScreenshot() {
       <div className="flex gap-6">
         {/* Left: controls */}
         <div className="w-64 shrink-0 space-y-4">
-          {/* Browser status — always rendered to avoid CLS */}
+          {/* Browser status - always rendered to avoid CLS */}
           <div className={cn(
             'rounded-xl border p-3 text-xs flex items-start gap-2',
             state.browserStatus === 'error'
@@ -204,7 +204,7 @@ export default function WebsiteScreenshot() {
             )}
           </Button>
 
-          {/* Download button — shown after capture */}
+          {/* Download button - shown after capture */}
           {isDone && state.preview && (
             <Button
               variant="outline"
@@ -236,7 +236,7 @@ export default function WebsiteScreenshot() {
               <div>
                 <p className="text-sm font-medium text-destructive">Page timed out</p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Took longer than 1 minute to load. No page should take that long — maybe it's having an existential crisis.
+                  The page took longer than a minute to load. Check the URL or try again.
                 </p>
               </div>
             </div>

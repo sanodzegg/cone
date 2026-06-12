@@ -10,9 +10,9 @@ type Status = 'idle' | 'generating' | 'done' | 'error' | 'timeout'
 
 const PAPER_FORMATS = ['A4', 'A3', 'A5', 'Letter', 'Legal', 'Tabloid', 'Ledger', 'A0', 'A1', 'A2', 'A6']
 const WAIT_UNTIL_OPTIONS: { value: 'load' | 'domcontentloaded' | 'networkidle'; label: string; desc: string; exclamation?: string }[] = [
-  { value: 'domcontentloaded', label: 'DOM ready', desc: 'Fastest — captures the page as soon as HTML is parsed, before images or scripts finish loading.' },
-  { value: 'load', label: 'Load event', desc: 'Balanced — waits for images and stylesheets to finish loading. Good default for most pages.' },
-  { value: 'networkidle', label: 'Network idle', desc: 'Thorough — waits until all network requests finish. Use for JS-heavy or lazy-loaded pages.', exclamation: 'Pages can take a long time to fully load all network requests and may result in a timeout.' },
+  { value: 'domcontentloaded', label: 'DOM ready', desc: 'Fastest - captures the page as soon as HTML is parsed, before images or scripts finish loading.' },
+  { value: 'load', label: 'Load event', desc: 'Balanced - waits for images and stylesheets to finish loading. Good default for most pages.' },
+  { value: 'networkidle', label: 'Network idle', desc: 'Thorough - waits until all network requests finish. Use for JS-heavy or lazy-loaded pages.', exclamation: 'Pages can take a long time to fully load all network requests and may result in a timeout.' },
 ]
 const VIEWPORT_PRESETS = [
   { label: 'Mobile', value: 390 },
@@ -119,7 +119,7 @@ export default function WebsitePdf() {
       <section className="section py-8">
         <div className="mb-6">
           <h2 className="text-2xl font-body font-semibold text-foreground">Download as PDF</h2>
-          <p className="text-sm text-muted-foreground mt-1">Save any webpage as a PDF file.</p>
+          <p className="text-sm text-muted-foreground mt-1">Save any webpage as a PDF.</p>
         </div>
         <div className="rounded-xl border border-destructive/40 bg-destructive/10 p-8 flex flex-col items-center justify-center gap-3 text-center h-64">
           <WifiOff className="size-8 text-destructive" />
@@ -137,7 +137,7 @@ export default function WebsitePdf() {
       <div className="mb-6 flex items-start justify-between">
         <div>
           <h2 className="text-2xl font-body font-semibold text-foreground">Download as PDF</h2>
-          <p className="text-sm text-muted-foreground mt-1">Save any webpage as a PDF file.</p>
+          <p className="text-sm text-muted-foreground mt-1">Save any webpage as a PDF.</p>
         </div>
         {(isDone || isError) && (
           <Button variant="outline" size="sm" onClick={reset} className="gap-1.5 shrink-0">
@@ -361,7 +361,7 @@ export default function WebsitePdf() {
                 <p className="text-sm font-medium text-green-500">{savedPath ? 'Save again' : 'Download PDF'}</p>
                 {savedPath
                   ? <p className="text-[10px] text-muted-foreground mt-1 break-all">{savedPath}</p>
-                  : <p className="text-xs text-muted-foreground mt-1">Click to save the PDF file.</p>
+                  : <p className="text-xs text-muted-foreground mt-1">Click to save the PDF.</p>
                 }
               </div>
             </div>
@@ -370,7 +370,7 @@ export default function WebsitePdf() {
               <AlertCircle className="size-8 text-destructive" />
               <div>
                 <p className="text-sm font-medium text-destructive">Page timed out</p>
-                <p className="text-xs text-muted-foreground mt-1">The page took too long to load.</p>
+                <p className="text-xs text-muted-foreground mt-1">The page took too long to load. Try a faster wait mode like DOM ready.</p>
               </div>
             </div>
           ) : isError ? (

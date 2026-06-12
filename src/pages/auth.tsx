@@ -169,7 +169,7 @@ export default function Auth() {
                         {message && <p className="text-sm text-primary">{message}</p>}
 
                         <Button type="submit" className="w-full" disabled={submitting}>
-                            {submitting ? 'Please wait…' : mode === 'login' ? 'Sign in' : 'Create account'}
+                            {submitting ? (mode === 'login' ? 'Signing in…' : 'Creating account…') : mode === 'login' ? 'Sign in' : 'Create account'}
                         </Button>
                     </form>
 

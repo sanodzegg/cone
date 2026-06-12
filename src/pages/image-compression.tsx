@@ -124,7 +124,6 @@ export default function ImageCompression() {
             </Button>
             <div className="text-center">
               <h2 className="text-2xl font-body font-semibold text-foreground">Drop an image here</h2>
-              <p className="text-sm text-muted-foreground mt-1">Compress and compare before and after</p>
             </div>
             <div className="flex items-center justify-center flex-wrap gap-2">
               {ACCEPTED_EXT.map(ext => (
@@ -244,7 +243,7 @@ export default function ImageCompression() {
                   </div>
                   <div className="flex justify-between gap-4">
                     <span className="text-muted-foreground">Compressed</span>
-                    <span className="font-medium">{compressedSize ? formatBytes(compressedSize) : '—'}</span>
+                    <span className="font-medium">{compressedSize ? formatBytes(compressedSize) : '-'}</span>
                   </div>
                   {saved !== null && savedPct !== null && saved !== 0 && (
                     <div className="flex justify-between gap-4">

@@ -64,7 +64,7 @@ export function useSettingsSync(user: User | null) {
                         applyToStore(remote)
                     }
                 } else {
-                    // No remote row yet — push local up
+                    // No remote row yet - push local up
                     saveToSupabase(user.id, local)
                 }
                 didLoadRemote.current = true

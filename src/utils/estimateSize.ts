@@ -11,7 +11,7 @@ const STATIC_RATIO: Partial<Record<string, Partial<Record<string, number>>>> = {
   gif:  { webp: 0.15, avif: 0.12, jpg: 0.22, png: 1.2,  tiff: 1.3 },
   tiff: { webp: 0.10, avif: 0.08, jpg: 0.15, png: 0.90, gif: 0.75 },
   tif:  { webp: 0.10, avif: 0.08, jpg: 0.15, png: 0.90, gif: 0.75 },
-  // SVG intentionally excluded — file size has no correlation to raster output size
+  // SVG intentionally excluded - file size has no correlation to raster output size
 
   // Video
   mp4:  { webm: 0.85, mov: 1.0,  avi: 1.1,  mkv: 0.95, gif: 1.3 },

@@ -56,7 +56,7 @@ export const createConversionSlice: StateCreator<
       settings?.keepMetadata === false
     )
 
-    // Record actual ratio for future estimates (skip SVG source — file size has no correlation to raster output)
+    // Record actual ratio for future estimates (skip SVG source - file size has no correlation to raster output)
     const shouldLearn = sourceFormat && format && sourceFormat !== 'svg'
     const learnKey = shouldLearn ? ratioKey(sourceFormat, format) : null
     const learnQuality = engineId === 'image' ? (settings?.quality ?? get().imageQuality) : 80

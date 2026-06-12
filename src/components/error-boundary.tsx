@@ -12,7 +12,7 @@ interface State {
 
 // Top-level safety net. A render error anywhere below this boundary would otherwise blank
 // the whole window (React unmounts the tree on an uncaught render throw). Instead we catch
-// it, log for diagnostics, and show a recoverable fallback. Must be a class component —
+// it, log for diagnostics, and show a recoverable fallback. Must be a class component -
 // there is no hook equivalent for getDerivedStateFromError / componentDidCatch.
 export class ErrorBoundary extends Component<Props, State> {
   state: State = { error: null }
@@ -26,7 +26,7 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   handleReload = () => {
-    // Full renderer reload is the most reliable recovery — HashRouter state, stores, and any
+    // Full renderer reload is the most reliable recovery - HashRouter state, stores, and any
     // wedged component tree are all rebuilt from scratch.
     window.location.reload()
   }
@@ -44,7 +44,7 @@ export class ErrorBoundary extends Component<Props, State> {
           <div className="flex flex-col gap-1.5">
             <h1 className="text-lg font-semibold text-foreground">Something went wrong</h1>
             <p className="text-sm text-muted-foreground">
-              The app hit an unexpected error. Reloading should get you back — your files and
+              The app hit an unexpected error. Reloading should get you back - your files and
               settings are safe.
             </p>
           </div>

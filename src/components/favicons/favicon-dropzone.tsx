@@ -59,7 +59,7 @@ export default function FaviconDropzone({ onFile }: Props) {
 
                 <div className="text-center">
                     <h2 className="text-2xl font-body font-semibold text-foreground">Drop an image here</h2>
-                    <p className="text-sm text-muted-foreground mt-1">We'll generate all icon sizes + .ico for you</p>
+                    <p className="text-sm text-muted-foreground mt-1">You'll get .ico, every PNG size, and macOS .icns</p>
                 </div>
 
                 <div className="flex items-center justify-center flex-wrap gap-2">

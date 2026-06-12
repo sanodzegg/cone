@@ -1,4 +1,4 @@
-# Conesoft — Project Reference
+# Conesoft - Project Reference
 
 Reference for AI-assisted development sessions. Reflects the **actual code** as of the
 last audit (see `TODO.md` for open work). When in doubt, trust the code over this file
@@ -11,7 +11,7 @@ Current version: **1.9.1** (`package.json`)
 ## What is Conesoft
 
 A **local-first Electron desktop app** for file conversion and media tooling. All
-processing runs on-device — no uploads, no server. macOS + Windows.
+processing runs on-device - no uploads, no server. macOS + Windows.
 
 The conversion engines run in the **Electron main process** (Sharp, FFmpeg, pdf-lib,
 Playwright). The renderer (React) calls them over IPC. Some browser-only work (SVGO,
@@ -26,7 +26,7 @@ background removal via ONNX, JSZip) runs in the renderer.
 | Framework | Electron 41 |
 | Frontend | React 19 + TypeScript + Vite 7 |
 | Styling | Tailwind CSS v4 + shadcn/ui (Base UI primitives, `@base-ui/react`) |
-| State | Zustand 5 — slices + `persist` middleware; plus standalone stores |
+| State | Zustand 5 - slices + `persist` middleware; plus standalone stores |
 | Image processing | Sharp (libvips) + `heic-convert` for HEIC/HEIF decode |
 | Video/audio | FFmpeg (`ffmpeg-static` + `fluent-ffmpeg`) |
 | PDF | `pdf-lib`, `pdfkit`, `pdf-parse`, `mammoth`, `docx`, `pdfjs-dist` (render) |
@@ -44,44 +44,44 @@ background removal via ONNX, JSZip) runs in the renderer.
 ## App Structure
 
 ```
-main.js                — Electron main process entry (root, NOT electron/main.js)
+main.js                - Electron main process entry (root, NOT electron/main.js)
 electron/
-  preload.js           — contextBridge: window.electron.* IPC bindings
-  convert.js           — image (Sharp), document, favicon, VIDEO + AUDIO (FFmpeg) handlers
-  bulk-convert.js      — bulk folder conversion + fs.watch watch mode
-  pdf-tools.js         — PDF merge
-  pdf-editor.js        — PDF page ops, watermark, form fill, burn annotations
-  website-pdf.js       — Playwright website→PDF (shares browser w/ screenshot)
-  screenshot.js        — Playwright screenshot + owns the shared browser instance
-  lighthouse.js        — Lighthouse runner (bundled dep; forks lighthouse-worker.js)
-  lighthouse-worker.js — runs one audit in a utilityProcess (lighthouse Node API +
+  preload.js           - contextBridge: window.electron.* IPC bindings
+  convert.js           - image (Sharp), document, favicon, VIDEO + AUDIO (FFmpeg) handlers
+  bulk-convert.js      - bulk folder conversion + fs.watch watch mode
+  pdf-tools.js         - PDF merge
+  pdf-editor.js        - PDF page ops, watermark, form fill, burn annotations
+  website-pdf.js       - Playwright website→PDF (shares browser w/ screenshot)
+  screenshot.js        - Playwright screenshot + owns the shared browser instance
+  lighthouse.js        - Lighthouse runner (bundled dep; forks lighthouse-worker.js)
+  lighthouse-worker.js - runs one audit in a utilityProcess (lighthouse Node API +
                          chrome-launcher against the bundled Playwright Chromium)
-  batch-rename.js      — folder scan + rename rules
-  file-save.js         — pick folder / save buffer to disk (auto-download)
+  batch-rename.js      - folder scan + rename rules
+  file-save.js         - pick folder / save buffer to disk (auto-download)
 
 src/
-  main.tsx             — App root: providers, ConversionCountContext wiring
-  router.tsx           — React.lazy routes under one top-level <Suspense>
-  pages/               — one file per route
-  components/          — grouped by feature (files, bulk-converter, image-editor,
+  main.tsx             - App root: providers, ConversionCountContext wiring
+  router.tsx           - React.lazy routes under one top-level <Suspense>
+  pages/               - one file per route
+  components/          - grouped by feature (files, bulk-converter, image-editor,
                          pdf-editor, svg-editor, favicons, settings, profile, ui, …)
-  engines/             — ConversionEngine interface + image/video/audio/document + registry
-  services/            — conversionService.ts (orchestrates homepage conversions)
+  engines/             - ConversionEngine interface + image/video/audio/document + registry
+  services/            - conversionService.ts (orchestrates homepage conversions)
   store/
-    useConvertStore.ts — persisted Zustand store (file + conversion + settings slices)
-    useAuthStore.ts    — auth/plan/subscriptionEnd (standalone, localStorage-backed)
-    slices/            — fileSlice, conversionSlice, settingsSlice
-  lib/                 — supabase, useAuth (re-export of useAuthStore), useSettingsSync,
+    useConvertStore.ts - persisted Zustand store (file + conversion + settings slices)
+    useAuthStore.ts    - auth/plan/subscriptionEnd (standalone, localStorage-backed)
+    slices/            - fileSlice, conversionSlice, settingsSlice
+  lib/                 - supabase, useAuth (re-export of useAuthStore), useSettingsSync,
                          useConversionCount, ConversionCountContext, pdf-worker
-  types/               — index.ts (shared interfaces), electron.d.ts (window.electron API)
-  utils/               — fileUtils (fileKey, getExtension, formatBytes), estimateSize
+  types/               - index.ts (shared interfaces), electron.d.ts (window.electron API)
+  utils/               - fileUtils (fileKey, getExtension, formatBytes), estimateSize
 
 supabase/
-  functions/paddle-webhook/      — Paddle webhook (transaction.completed, subscription.canceled)
-  functions/cancel-subscription/ — authenticated cancel via Paddle API
-  migrations/                    — schema, plan-default fix, paddle fields
+  functions/paddle-webhook/      - Paddle webhook (transaction.completed, subscription.canceled)
+  functions/cancel-subscription/ - authenticated cancel via Paddle API
+  migrations/                    - schema, plan-default fix, paddle fields
 
-scripts/install-browser.mjs      — installs Chromium into ./ms-playwright for bundling
+scripts/install-browser.mjs      - installs Chromium into ./ms-playwright for bundling
 ```
 
 > **Stale-doc traps:** there is no `electron/main.js` (entry is root `main.js`) and no
@@ -106,7 +106,7 @@ gate certain formats.
 
 **IPC contract:** engine reads `file.arrayBuffer()` → `window.electron.convert*` →
 handler returns a Node `Buffer` → arrives in the renderer as a `Uint8Array<ArrayBuffer>`
-→ wrap with **`new Blob([result])`** (not `result.buffer` — that can include bytes
+→ wrap with **`new Blob([result])`** (not `result.buffer` - that can include bytes
 outside the view). Types live in `src/types/electron.d.ts`.
 
 **Image conversion gotchas (`electron/convert.js`):**
@@ -126,13 +126,13 @@ This is the most intricate subsystem. Source of truth:
 ### Plans
 `trial | limited | monthly | annual | lifetime` (enforced by a DB CHECK constraint).
 
-- **trial** — one-time **token budget** (100 tokens; see below). When exhausted → flips to `limited`.
-- **limited** — daily **token budget** (50/day). Means **either** an exhausted trial **or** a
+- **trial** - one-time **token budget** (100 tokens; see below). When exhausted → flips to `limited`.
+- **limited** - daily **token budget** (50/day). Means **either** an exhausted trial **or** a
   churned/expired subscription. The two are disambiguated by `subscriptionEnd`:
   non-null ⇒ former subscriber (never resurrect to trial).
-- **monthly / annual** — unlimited while active. `effectivePlan()` downgrades them to
+- **monthly / annual** - unlimited while active. `effectivePlan()` downgrades them to
   `limited` once `subscriptionEnd` is in the past.
-- **lifetime** — unlimited forever.
+- **lifetime** - unlimited forever.
 
 `useAuthStore` holds `user`, `plan`, `subscriptionEnd`, `loading`. Plan is mirrored to
 `localStorage` and kept live via a Supabase Realtime subscription on `users` (so manual
@@ -141,12 +141,12 @@ DB edits / webhook updates propagate). `useAuth` is just a re-export of `useAuth
 ### Token model (the quota currency)
 Usage is metered in **tokens**, stored explicitly (not derived). Three meters, each with one
 job (`src/lib/useConversionCount.ts`):
-- **`tokens_used`** — lifetime trial budget consumed, **caps at `TRIAL_TOKEN_LIMIT` (100)**.
+- **`tokens_used`** - lifetime trial budget consumed, **caps at `TRIAL_TOKEN_LIMIT` (100)**.
   Drives the trial gate + the server-side reset. DB column `conversion_counts.tokens_used`,
   mirrored to `localStorage` (`conesoft_conversion_counts`).
-- **daily tokens** — the limited tier's allowance, `DAILY_TOKEN_LIMIT` (**50/day**). Local
-  only (`conesoft_daily_counts` with a `resetAt`, auto-resets after 24h) — never synced.
-- **per-category counts** (`image/document/video/audio_count`) — every conversion ever, for
+- **daily tokens** - the limited tier's allowance, `DAILY_TOKEN_LIMIT` (**50/day**). Local
+  only (`conesoft_daily_counts` with a `resetAt`, auto-resets after 24h) - never synced.
+- **per-category counts** (`image/document/video/audio_count`) - every conversion ever, for
   analytics/bonuses. **Decoupled** from tokens (a bonus/promo can make them diverge).
 
 **Token costs per conversion:** image **1**, document **5**, video **8**, audio **6**
@@ -155,7 +155,7 @@ job (`src/lib/useConversionCount.ts`):
 ### Spend = trial-first, then spill into daily
 `spendTokens(engine, plan)` is the single reservation primitive (replaced the old
 `incrementLocalCount`). Free tiers (trial **and** limited) draw from the remaining trial
-budget first, then **spill** the remainder into the daily allowance — so one conversion can
+budget first, then **spill** the remainder into the daily allowance - so one conversion can
 straddle the boundary (at 93/100 an 8-token video = 7 trial + 1 daily → daily `1/50`, and
 `tokens_used` lands on exactly 100). Returns `[refund, reserved]`; `reserved=false` ⇒ the
 combined trial+daily budget can't cover it. Paid plans are ungated (count only). `refund()`
@@ -170,7 +170,7 @@ reverses the exact split. Reservation is a synchronous localStorage RMW, so imag
 
 ### Server sync + the reset
 - `useConversionCount(user)`: on sign-in **max-merges** server vs local (counts **and**
-  `tokens_used` — all monotonic) and pushes back. Realtime `UPDATE` on `conversion_counts`
+  `tokens_used` - all monotonic) and pushes back. Realtime `UPDATE` on `conversion_counts`
   applies admin edits verbatim; our own echoes are skipped via `ownPushTimestamps`.
   `syncCountToServer()` debounced 800 ms. `useCountsStore` exposes `counts`, `tokensUsed`,
   `dailyTokens` reactively.
@@ -180,47 +180,47 @@ reverses the exact split. Reservation is a synchronous localStorage RMW, so imag
   `users`-table Realtime subscription in `useAuthStore`. The old client-side
   `reconcilePlanWithCounts` is gone. ⚠️ Caveat: sign-in still `max`-merges `tokens_used`, so
   an admin reset only "sticks" while the user's app is **running**; reset while it's closed
-  can be re-inflated on next sign-in (accepted — see `TODO.md`).
+  can be re-inflated on next sign-in (accepted - see `TODO.md`).
 
 ### ⚠️ Where metering is wired (and where it ISN'T)
 The **only** place tokens are spent is `conversionService.convertFile` (`spendTokens`). The
-shared `onConversionSuccess` in `main.tsx` only triggers server sync + the exhaustion flip —
+shared `onConversionSuccess` in `main.tsx` only triggers server sync + the exhaustion flip -
 **it does not spend.**
 
 → Therefore **only the homepage converter** meters usage. **Bulk converter, watch mode,
 favicon generator, and image-compression bypass tokens and limits entirely.** Known open
-decision — see `TODO.md` #1. Limit-enforcement UI (`isAtLimit`) exists only in the homepage
+decision - see `TODO.md` #1. Limit-enforcement UI (`isAtLimit`) exists only in the homepage
 dropbox. (`spendTokens` is the single entry point, so wiring the others in later is small.)
 
 ---
 
 ## Features (verified)
 
-- **Homepage file converter** — drag/drop, per-file format + settings (resize, quality,
+- **Homepage file converter** - drag/drop, per-file format + settings (resize, quality,
   keep-metadata for images), estimated output size (images), Convert All, results with
   download / bulk ZIP, suspicious-savings tooltip, duplicate detection, optional
   **auto-download to folder**. Virtualized lists ≥20 items (`@tanstack/react-virtual`).
-- **Bulk converter** — pick folder → recursive image scan → convert (alongside /
+- **Bulk converter** - pick folder → recursive image scan → convert (alongside /
   subfolder / custom), delete-originals toggle, progress, **watch mode** (`fs.watch`,
-  recursive — macOS/Windows only), per-file retry.
-- **Image editor** — canvas editor: Adjust/Effects/Transform/Canvas/Overlay/Background-
+  recursive - macOS/Windows only), per-file retry.
+- **Image editor** - canvas editor: Adjust/Effects/Transform/Canvas/Overlay/Background-
   Remove, undo/redo, export dialog. Files can be sent from homepage.
-- **Image compression** — live before/after comparison slider, quality, JPEG/WebP/AVIF.
-- **Favicon generator** — `.ico` (multi-size) + PNGs (16…1024) + macOS icns set.
-- **SVG editor** — CodeMirror, prettify/optimize (SVGO), preview, code export
+- **Image compression** - live before/after comparison slider, quality, JPEG/WebP/AVIF.
+- **Favicon generator** - `.ico` (multi-size) + PNGs (16…1024) + macOS icns set.
+- **SVG editor** - CodeMirror, prettify/optimize (SVGO), preview, code export
   (React/Vue/Angular/HTML), data-URI variants.
-- **PDF merge** — drag-reorder, merge, save.
-- **PDF editor** — page reorder/rotate/delete, watermark (text/image), form fill, burn
+- **PDF merge** - drag-reorder, merge, save.
+- **PDF editor** - page reorder/rotate/delete, watermark (text/image), form fill, burn
   annotations (highlight/draw/arrow/text). Renders via `pdfjs-dist`.
-- **Website PDF** / **Website Screenshot** — Playwright; share one browser instance;
+- **Website PDF** / **Website Screenshot** - Playwright; share one browser instance;
   block trackers, scroll to trigger lazy media, replace videos, strip fixed/chat widgets.
-- **Lighthouse** — performance/a11y/best-practices/SEO audit, desktop+mobile in parallel.
+- **Lighthouse** - performance/a11y/best-practices/SEO audit, desktop+mobile in parallel.
   `lighthouse` is a bundled dependency run via its Node API in a utilityProcess against
   the bundled Chromium (no runtime install; updates ship with app releases).
-- **Batch rename** — find/replace, prefix/suffix, case, sequential numbering, dedupe preview.
-- **Settings** — image-quality default, per-engine default formats, default output
+- **Batch rename** - find/replace, prefix/suffix, case, sequential numbering, dedupe preview.
+- **Settings** - image-quality default, per-engine default formats, default output
   folder; synced to Supabase when signed in (conflict dialog on divergence).
-- **Pricing / Account** — Paddle checkout, plan + renewal display, cancel flow.
+- **Pricing / Account** - Paddle checkout, plan + renewal display, cancel flow.
 
 ---
 
@@ -228,15 +228,15 @@ dropbox. (`spendTokens` is the single entry point, so wiring the others in later
 
 ### Supabase (project `otdahhtxvwchkxwehvsq`)
 - Client from `VITE_SUPABASE_URL` + `VITE_SUPABASE_PUBLISHABLE_KEY` (`.env`, gitignored;
-  anon key is safe to ship — Vite inlines it into the renderer bundle).
+  anon key is safe to ship - Vite inlines it into the renderer bundle).
 - Email/password auth; OAuth deep-link plumbing exists (`conesoft://` protocol,
   `open-url` / `second-instance`).
 
 ### Tables (all RLS-enabled)
-- `users` — id, email, plan, paid_at, license_key, subscription_end, created_at,
+- `users` - id, email, plan, paid_at, license_key, subscription_end, created_at,
   `paddle_customer_id`, `paddle_subscription_id`, `paddle_transaction_id`.
-- `settings` — user_id, image_quality, default_*_format, default_output_folder, updated_at.
-- `conversion_counts` — user_id, image_count, document_count, video_count,
+- `settings` - user_id, image_quality, default_*_format, default_output_folder, updated_at.
+- `conversion_counts` - user_id, image_count, document_count, video_count,
   **audio_count**, updated_at.
 - Trigger `handle_new_user` inserts `users` (plan `trial`) + zeroed `conversion_counts` on signup.
 
@@ -259,22 +259,22 @@ dropbox. (`spendTokens` is the single entry point, so wiring the others in later
   run from disk). ⚠️ An **unpacked** module can't resolve a dependency that stays **packed**
   in the asar (Node walks the real `app.asar.unpacked` dir and never re-enters `app.asar`).
   So every runtime dep of an unpacked package must itself be unpacked: `semver` is sharp's
-  (its `libvips.js` does `require('semver/functions/coerce')` at load — drop it and the app
+  (its `libvips.js` does `require('semver/functions/coerce')` at load - drop it and the app
   **won't launch**); `heic-decode`/`jpeg-js`/`pngjs` are heic-convert's.
 - ⚠️ **Phantom deps in `package.json`** (`core-util-is`, `immediate`, `isarray`, `lie`,
   `pako`, `process-nextick-args`, `readable-stream`, `safe-buffer`, `setimmediate`) are
-  **not used directly** — they're transitive deps of `jszip` (via `mammoth` → docx reading in
+  **not used directly** - they're transitive deps of `jszip` (via `mammoth` → docx reading in
   the main process). electron-builder's pnpm collector reliably packs **direct** deps but
   **drops some nested transitive ones**, so they're declared direct to force inclusion.
   Versions are pinned to what the nested consumers need (e.g. `readable-stream@2`'s tree).
-  **Do not "clean up" these as unused** — removing them breaks packaged builds. After any
+  **Do not "clean up" these as unused** - removing them breaks packaged builds. After any
   dependency change, re-verify the main-process require closure is fully present in the asar.
 - **Chromium is bundled** via `extraResources: ms-playwright` + `scripts/install-browser.mjs`
   (run by `package*`). At runtime, packaged mode sets
   `PLAYWRIGHT_BROWSERS_PATH = resources/ms-playwright` **before** requiring
   `playwright-core` (`electron/screenshot.js`). Dev uses the developer's own browser cache.
   Adds ~150 MB per installer. **Verify on a clean machine after any packaging change.**
-- `package*` scripts gate on `tsc --noEmit` (the plain `vite build` does NOT typecheck —
+- `package*` scripts gate on `tsc --noEmit` (the plain `vite build` does NOT typecheck -
   esbuild strips types).
 - Mac targets dmg+zip; Win target nsis. `postinstall` runs `electron-builder
   install-app-deps` + ffmpeg-static install.
@@ -291,12 +291,12 @@ dropbox. (`spendTokens` is the single entry point, so wiring the others in later
 
 - **Commits:** single line, no body, no bullet points, no co-author trailer. Never stage
   or commit unless the user explicitly says "commit".
-- **No responsive breakpoints** — desktop-only; no `sm:`/`md:`/`lg:` (only `2xl:` scale-ups appear).
-- **Icon colors:** full opacity only — no `/40`-style opacity variants on icon colors.
+- **No responsive breakpoints** - desktop-only; no `sm:`/`md:`/`lg:` (only `2xl:` scale-ups appear).
+- **Icon colors:** full opacity only - no `/40`-style opacity variants on icon colors.
 - **shadcn:** never overwrite existing component files on install.
 - `TooltipContent` must be a sibling of `TooltipTrigger`; add `flex-1 min-w-0` to
   `TooltipTrigger` (not a child) for truncation in flex rows.
-- Run `pnpm typecheck` before considering work done — the build won't catch type errors otherwise.
+- Run `pnpm typecheck` before considering work done - the build won't catch type errors otherwise.
 
 ---
 
@@ -306,5 +306,5 @@ dropbox. (`spendTokens` is the single entry point, so wiring the others in later
 - `'limited'` is overloaded (exhausted trial vs churned sub); disambiguate via `subscriptionEnd`.
 - IPC results are `Uint8Array<ArrayBuffer>` → use `new Blob([result])`.
 - `pdfjs-dist` v5 `page.render(...)` requires a `canvas` field alongside `canvasContext`.
-- `fileKey(file)` = `name-size-lastModified` — the identity used everywhere for dedupe/state.
+- `fileKey(file)` = `name-size-lastModified` - the identity used everywhere for dedupe/state.
 - PDF main-process state (`editorBuffer`, `mergedBuffer`) is a module-level singleton (single-window assumption).

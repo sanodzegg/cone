@@ -95,7 +95,7 @@ export default function PdfEditor() {
       <div className="mb-6">
         <h2 className="text-2xl font-body font-semibold">PDF Editor</h2>
         <p className="text-sm text-muted-foreground mt-1">
-          Reorder pages, annotate, add watermarks, and fill forms — all locally.
+          Reorder pages, annotate, add watermarks, and fill forms - all locally.
         </p>
       </div>
 

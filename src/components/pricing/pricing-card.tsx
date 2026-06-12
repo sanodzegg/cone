@@ -118,7 +118,7 @@ export function PricingCard({
                                     <path d="M19.2502 13.4903C17.2329 13.9151 12.0803 14.7522 10.9872 12.5038C10.1127 10.7051 12.5922 8.94374 11.7177 7.14504C10.6246 4.89667 5.02236 5.95241 3.00505 6.37719" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                                     <path d="M5.3725 14.6775L1.0002 5.68397L9.9937 1.31167" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                                 </svg>
-                                <span className="text-xs 2xl:text-sm text-primary font-medium -mb-2 ml-1">Save 20%</span>
+                                <span className="text-xs 2xl:text-sm text-primary font-medium -mb-2 ml-1">Save 25%</span>
                             </div>
                         </div>
                     ) : (

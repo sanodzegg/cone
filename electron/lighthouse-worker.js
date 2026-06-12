@@ -1,5 +1,5 @@
 // Runs a single Lighthouse audit in an Electron utilityProcess. Lighthouse's trace
-// processing is CPU-heavy — running it in the main process would block the event loop
+// processing is CPU-heavy - running it in the main process would block the event loop
 // (all IPC, window events) for seconds at a time, and the desktop+mobile audits run in
 // parallel. One worker per audit keeps them genuinely parallel like the old CLI did.
 //

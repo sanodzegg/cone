@@ -13,7 +13,7 @@ const sharp = require(sharpPath)
 const heicConvert = require('heic-convert')
 
 // ffmpeg-static binary path (unpacked from asar in production).
-// ffmpeg-static names the binary `ffmpeg.exe` on Windows and `ffmpeg` elsewhere — the
+// ffmpeg-static names the binary `ffmpeg.exe` on Windows and `ffmpeg` elsewhere - the
 // packaged path must match or video/audio conversion fails with ENOENT on Windows.
 const ffmpegBinaryName = process.platform === 'win32' ? 'ffmpeg.exe' : 'ffmpeg'
 const ffmpegStaticPath = app.isPackaged
@@ -108,18 +108,18 @@ function normalizeFormat(fmt) {
 // Centralised so both single-file and bulk-convert use identical logic.
 function sharpFormatOptions(sharpFormat, quality) {
   if (sharpFormat === 'png') {
-    // Sharp ignores `quality` for PNG — map to compressionLevel (0=fast/large, 9=slow/small).
+    // Sharp ignores `quality` for PNG - map to compressionLevel (0=fast/large, 9=slow/small).
     return { compressionLevel: Math.round((100 - quality) / 100 * 9) }
   }
   if (sharpFormat === 'webp') {
-    // At quality 100 use lossless — avoids the lossy-at-max bloat vs a lossless source.
+    // At quality 100 use lossless - avoids the lossy-at-max bloat vs a lossless source.
     return quality >= 100 ? { lossless: true } : { quality }
   }
   if (sharpFormat === 'gif') {
     // Sharp GIF output ignores quality entirely.
     return {}
   }
-  // jpeg, avif, heif, tiff — quality maps directly
+  // jpeg, avif, heif, tiff - quality maps directly
   return { quality }
 }
 
@@ -129,9 +129,9 @@ function registerConvertHandlers() {
     const sharpFormat = normalizeFormat(targetFormat)
     let buf = Buffer.from(buffer)
 
-    // HEIC/HEIF uses HEVC which sharp's prebuilt libheif omits — decode via heic-convert first.
+    // HEIC/HEIF uses HEVC which sharp's prebuilt libheif omits - decode via heic-convert first.
     // ftyp box is at bytes 4-7; major brand at 8-11 distinguishes HEIC from MP4/MOV.
-    // AVIF shares the generic 'mif1'/'msf1' brands with HEIF but is AV1, not HEVC —
+    // AVIF shares the generic 'mif1'/'msf1' brands with HEIF but is AV1, not HEVC -
     // sharp decodes it natively, so it must NOT be sent to heic-convert. Detect the
     // 'avif'/'avis' brand anywhere in the ftyp box (major + compatible brands) and skip.
     const brand = buf.subarray(8, 12).toString('ascii')

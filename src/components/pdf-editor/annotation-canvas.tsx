@@ -204,7 +204,7 @@ const AnnotationCanvas = forwardRef<AnnotationCanvasHandle, Props>(function Anno
           document.body.removeChild(input)
         }
       })
-      // Show a native prompt as fallback UX — invisible input above is for keyboard capture
+      // Show a native prompt as fallback UX - invisible input above is for keyboard capture
       const text = window.prompt('Enter annotation text:')
       if (text && text.trim()) {
         const ann: TextAnnotation = {

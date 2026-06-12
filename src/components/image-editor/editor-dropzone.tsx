@@ -47,7 +47,6 @@ export default function EditorDropzone({ onFile }: Props) {
                 </Button>
                 <div className="text-center">
                     <h2 className="text-2xl font-body font-semibold text-foreground">Drop an image here</h2>
-                    <p className="text-sm text-muted-foreground mt-1">Crop and export your image</p>
                 </div>
                 <div className="flex items-center justify-center flex-wrap gap-2">
                     {ACCEPTED_EXT.map(ext => (
