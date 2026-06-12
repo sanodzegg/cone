@@ -26,7 +26,7 @@ function saveFavorites(favs: string[]) {
 }
 
 // A nav item is plan-locked when it's `proOnly` and the user is on the limited tier, OR when
-// it's `paidOnly` and the user isn't on a paid plan (paidOnly is stricter — it also locks
+// it's `paidOnly` and the user isn't on a paid plan (paidOnly is stricter - it also locks
 // trial). Shared by the per-item render and the group-collapse logic so they stay in sync.
 function isChildLocked(child: GroupChild, isLimited: boolean, isPaid: boolean): boolean {
     return (isLimited && !!child.proOnly) || (!isPaid && !!child.paidOnly)

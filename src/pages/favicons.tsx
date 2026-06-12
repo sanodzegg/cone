@@ -20,7 +20,7 @@ export default function FaviconConversion() {
     const atLimit = isAtLimit('image', plan)
 
     const handleFile = async (file: File) => {
-        // Generating a favicon set is one image conversion — reserve a token up front and
+        // Generating a favicon set is one image conversion - reserve a token up front and
         // refund it if the generation fails, mirroring the homepage converter.
         const [refund, reserved] = spendTokens('image', plan)
         if (!reserved) {

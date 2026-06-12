@@ -65,7 +65,7 @@ are Pro-only** (gated, not metered).
   item is `paidOnly` (locks for trial **and** limited, vs `proOnly` which locks only limited),
   and the route uses `PaidRoute` (`router.tsx`) → redirects non-paid plans to `/pricing`. Lock
   predicate `isChildLocked` lives in `navigation-secondary.tsx`; `isPaidPlan` in `useAuthStore`.
-  No `electron/bulk-convert.js` changes needed — gating happens entirely in the renderer.
+  No `electron/bulk-convert.js` changes needed - gating happens entirely in the renderer.
 
 ### 2. ✅ Lighthouse npm-install design - REPLACED with bundled engine (2026-06-11)
 The packaged Mac app crashed with `spawn npm ENOENT` (GUI apps don't get the shell PATH).

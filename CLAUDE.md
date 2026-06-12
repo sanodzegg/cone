@@ -185,19 +185,19 @@ reverses the exact split. Reservation is a synchronous localStorage RMW, so imag
 ### ⚠️ Where metering is wired (and where it ISN'T)
 Tokens are spent via `spendTokens` (reserve up front, `refund()` on failure) in **three**
 places: `conversionService.convertFile` (homepage), `favicons.tsx` `handleFile`, and
-`image-compression.tsx` `download` (only the actual download — the live preview re-encodes
+`image-compression.tsx` `download` (only the actual download - the live preview re-encodes
 freely). Each also gates its entry UI with `isAtLimit('image', plan)` (dropzone / Download
 button → "Upgrade to Pro"). The shared `onConversionSuccess` in `main.tsx` only triggers
-server sync + the exhaustion flip — **it does not spend.**
+server sync + the exhaustion flip - **it does not spend.**
 
 → The **bulk converter + watch mode** are **not metered** because they're **Pro-only** (decided
-2026-06-12) — per-file metering of an unbounded folder against a 100-token trial was a poor fit
+2026-06-12) - per-file metering of an unbounded folder against a 100-token trial was a poor fit
 (a 50-image folder = 50 tokens), and paid plans are ungated anyway. It's gated, not metered, via
 the **existing nav-lock pattern**: the nav item carries `paidOnly` (stricter sibling of `proOnly`)
 and renders locked (Lock icon, not clickable) for any non-paid plan; the route is guarded by
 `PaidRoute` (`router.tsx`) which redirects non-paid plans to `/pricing`. `isChildLocked` in
 `navigation-secondary.tsx` is the shared lock predicate: `(isLimited && proOnly) || (!isPaid &&
-paidOnly)` — so `proOnly` locks only `limited` (trial still reaches those tools, e.g. metered
+paidOnly)` - so `proOnly` locks only `limited` (trial still reaches those tools, e.g. metered
 compression), while `paidOnly` also locks `trial`. `isPaidPlan(plan)` (`useAuthStore`) is the
 single source of truth for "paid". See `TODO.md` #1.
 
@@ -209,7 +209,7 @@ single source of truth for "paid". See `TODO.md` #1.
   keep-metadata for images), estimated output size (images), Convert All, results with
   download / bulk ZIP, suspicious-savings tooltip, duplicate detection, optional
   **auto-download to folder**. Virtualized lists ≥20 items (`@tanstack/react-virtual`).
-- **Bulk converter** (**Pro-only** — `paidOnly` nav lock + `PaidRoute`) - pick folder →
+- **Bulk converter** (**Pro-only** - `paidOnly` nav lock + `PaidRoute`) - pick folder →
   recursive image scan → convert (alongside / subfolder / custom), delete-originals toggle,
   progress, **watch mode** (`fs.watch`, recursive - macOS/Windows only), per-file retry.
 - **Image editor** - canvas editor: Adjust/Effects/Transform/Canvas/Overlay/Background-
