@@ -1,6 +1,7 @@
 import { lazy, Suspense } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { useAuth } from "./lib/useAuth";
+import { isPaidPlan } from "./store/useAuthStore";
 
 import Homepage from './pages/homepage'
 const Settings = lazy(() => import('./pages/settings'))
@@ -25,6 +26,16 @@ function ProRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>
 }
 
+// Stricter than ProRoute: paid plans only (trial + limited both redirected). For features
+// that aren't metered and are sold as Pro-only, e.g. the bulk converter. The nav item is
+// also locked for non-paid plans (see navigation-secondary `paidOnly`); this guards direct
+// URL access.
+function PaidRoute({ children }: { children: React.ReactNode }) {
+  const { plan } = useAuth()
+  if (!isPaidPlan(plan)) return <Navigate to="/pricing" replace />
+  return <>{children}</>
+}
+
 export default function Router() {
   return (
     <Suspense>
@@ -35,7 +46,7 @@ export default function Router() {
           <Route path="/extensions/svg-editor" element={<SvgEditor />} />
           <Route path="/extensions/pdf-merge" element={<PdfMerge />} />
           <Route path="/extensions/image-editor" element={<ProRoute><ImageEditor /></ProRoute>} />
-          <Route path="/extensions/bulk-converter" element={<ProRoute><BulkConverter /></ProRoute>} />
+          <Route path="/extensions/bulk-converter" element={<PaidRoute><BulkConverter /></PaidRoute>} />
           <Route path="/extensions/batch-rename" element={<BatchRename />} />
           <Route path="/extensions/palette-extractor" element={<ProRoute><PaletteExtractor /></ProRoute>} />
           <Route path="/extensions/image-compression" element={<ProRoute><ImageCompression /></ProRoute>} />

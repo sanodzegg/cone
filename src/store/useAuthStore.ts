@@ -43,6 +43,12 @@ export const useAuthStore = create<AuthState>()(() => ({
     },
 }))
 
+// A plan that grants unlimited, ungated access (no token metering). Trial and limited are
+// the free tiers; everything else is a paid plan. Used to Pro-gate batch features like bulk.
+export function isPaidPlan(plan: Plan): boolean {
+    return plan === 'monthly' || plan === 'annual' || plan === 'lifetime'
+}
+
 function effectivePlan(plan: Plan, subscriptionEnd: string | null): Plan {
     if ((plan === 'monthly' || plan === 'annual') && subscriptionEnd && new Date(subscriptionEnd) < new Date()) {
         return 'limited'

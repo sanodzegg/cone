@@ -1,9 +1,14 @@
 import { useState, useRef, lazy } from 'react'
 import { Import, RotateCcw, Download, ZoomIn, ZoomOut, Maximize2 } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
+import { useAuth } from '@/lib/useAuth'
+import { useConversionCountContext } from '@/lib/ConversionCountContext'
+import { spendTokens, isAtLimit, isTrialExhausted } from '@/lib/useConversionCount'
 
 const ComparisonSlider = lazy(() => import('@/components/settings/comparison-slider'))
 
@@ -35,6 +40,10 @@ export default function ImageCompression() {
   const inputRef = useRef<HTMLInputElement>(null)
   const dropzoneRef = useRef<HTMLDivElement>(null)
   const fileRef = useRef<File | null>(null)
+  const navigate = useNavigate()
+  const { plan } = useAuth()
+  const { onConversionSuccess } = useConversionCountContext()
+  const atLimit = isAtLimit('image', plan)
 
   const loadFile = (file: File) => {
     if (!file.type.startsWith('image/')) return
@@ -65,16 +74,34 @@ export default function ImageCompression() {
 
   const download = async () => {
     if (!fileRef.current) return
-    const buffer = await fileRef.current.arrayBuffer()
-    const result = await window.electron.convert(buffer, format, quality)
-    const blob = new Blob([result], { type: `image/${format}` })
-    const url = URL.createObjectURL(blob)
-    const base = (imageName ?? 'image').replace(/\.[^.]+$/, '')
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `${base}-compressed.${format === 'jpeg' ? 'jpg' : format}`
-    a.click()
-    URL.revokeObjectURL(url)
+    // The live preview re-encodes constantly and is free; only an actual download counts.
+    // Reserve one image token up front and refund it if the encode fails.
+    const [refund, reserved] = spendTokens('image', plan)
+    if (!reserved) {
+      toast.error(
+        plan === 'limited' || isTrialExhausted()
+          ? 'Daily limit reached. Try again tomorrow or upgrade to Pro.'
+          : 'Conversion limit reached. Upgrade to continue.',
+        { description: 'Upgrade to Pro for unlimited compression.', duration: 5000 }
+      )
+      return
+    }
+    try {
+      const buffer = await fileRef.current.arrayBuffer()
+      const result = await window.electron.convert(buffer, format, quality)
+      const blob = new Blob([result], { type: `image/${format}` })
+      const url = URL.createObjectURL(blob)
+      const base = (imageName ?? 'image').replace(/\.[^.]+$/, '')
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `${base}-compressed.${format === 'jpeg' ? 'jpg' : format}`
+      a.click()
+      URL.revokeObjectURL(url)
+      onConversionSuccess('image')
+    } catch (e) {
+      refund()
+      toast.error(e instanceof Error ? e.message : 'Compression failed')
+    }
   }
 
   const reset = () => {
@@ -257,11 +284,17 @@ export default function ImageCompression() {
               )}
             </div>
 
-            {/* Col 3: download */}
-            <Button onClick={download} disabled={encoding} className="gap-1.5 shrink-0" size="sm">
-              <Download className="size-3.5" />
-              Download
-            </Button>
+            {/* Col 3: download (gated when out of token budget) */}
+            {atLimit ? (
+              <Button onClick={() => navigate('/pricing')} className="shrink-0" size="sm">
+                Upgrade to Pro
+              </Button>
+            ) : (
+              <Button onClick={download} disabled={encoding} className="gap-1.5 shrink-0" size="sm">
+                <Download className="size-3.5" />
+                Download
+              </Button>
+            )}
           </div>
         </div>
       )}

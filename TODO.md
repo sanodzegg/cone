@@ -51,24 +51,21 @@ server `updated_at` vs last local write - instead of blindly taking `max`).
 
 ## 🔴 Decisions needed / must-do before release
 
-### 1. Conversion counting only fires on the homepage
-**The big one.** Counts are incremented solely in `conversionService.convertFile`
-(`incrementLocalCount`). The shared `onConversionSuccess` in `src/main.tsx` only syncs to
-the server - it never increments. So these paths **bypass counting AND trial/daily limits**:
-- Bulk converter - `src/components/bulk-converter/use-bulk-converter.ts` (`startConvert`, watch)
-- Favicon generator - `src/pages/favicons.tsx`
-- Image compression - `src/pages/image-compression.tsx` (direct `window.electron.convert`)
-
-**Decision:** which of these should count against limits vs. stay free? (You said you'd
-decide.) Then:
-- If they should count: route them through a shared increment/limit helper (reserve →
-  refund-on-failure, mirroring `convertFile`), and add `isAtLimit` gating UI to the bulk,
-  favicon, and compression pages.
-- If they stay free: document it explicitly and leave as-is.
-
-Note: bulk conversion happens in the main process (`electron/bulk-convert.js`) with no
-limit awareness, so enforcing limits there means checking/reserving in the renderer
-before invoking, or returning counts from the handler to reserve after.
+### 1. ✅ Off-homepage metering - RESOLVED (2026-06-12)
+**Decision made:** favicon + image-compression **count** (1 image token each); **bulk + watch
+are Pro-only** (gated, not metered).
+- **Favicon** (`src/pages/favicons.tsx`) - `handleFile` reserves via `spendTokens('image', plan)`
+  and refunds on failure; `FaviconDropzone` takes an `atLimit` prop that disables it + swaps the
+  CTA to "Upgrade to Pro".
+- **Image compression** (`src/pages/image-compression.tsx`) - `download` reserves/refunds (the
+  live preview re-encode stays free); the Download button flips to "Upgrade to Pro" at the limit.
+- **Bulk converter + watch** - made **Pro-only** instead of metered (per-file metering of an
+  unbounded folder against a 100-token trial was a poor fit: 50-image folder = 50 tokens; paid
+  plans are ungated anyway). Gated via the existing nav-lock pattern, extended to trial: the nav
+  item is `paidOnly` (locks for trial **and** limited, vs `proOnly` which locks only limited),
+  and the route uses `PaidRoute` (`router.tsx`) → redirects non-paid plans to `/pricing`. Lock
+  predicate `isChildLocked` lives in `navigation-secondary.tsx`; `isPaidPlan` in `useAuthStore`.
+  No `electron/bulk-convert.js` changes needed — gating happens entirely in the renderer.
 
 ### 2. ✅ Lighthouse npm-install design - REPLACED with bundled engine (2026-06-11)
 The packaged Mac app crashed with `spawn npm ENOENT` (GUI apps don't get the shell PATH).

@@ -4,6 +4,8 @@ import type { FaviconResult } from "@/components/favicons/favicon-results"
 
 const FaviconResults = lazy(() => import("@/components/favicons/favicon-results"))
 import { useConversionCountContext } from "@/lib/ConversionCountContext"
+import { useAuth } from "@/lib/useAuth"
+import { spendTokens, isAtLimit, isTrialExhausted } from "@/lib/useConversionCount"
 
 type State =
     | { status: 'idle' }
@@ -14,8 +16,23 @@ type State =
 export default function FaviconConversion() {
     const [state, setState] = useState<State>({ status: 'idle' })
     const { onConversionSuccess } = useConversionCountContext()
+    const { plan } = useAuth()
+    const atLimit = isAtLimit('image', plan)
 
     const handleFile = async (file: File) => {
+        // Generating a favicon set is one image conversion — reserve a token up front and
+        // refund it if the generation fails, mirroring the homepage converter.
+        const [refund, reserved] = spendTokens('image', plan)
+        if (!reserved) {
+            setState({
+                status: 'error',
+                message: plan === 'limited' || isTrialExhausted()
+                    ? 'Daily limit reached. Try again tomorrow or upgrade to Pro.'
+                    : 'Conversion limit reached. Upgrade to continue.',
+            })
+            return
+        }
+
         setState({ status: 'converting' })
         try {
             const buffer = await file.arrayBuffer()
@@ -27,6 +44,7 @@ export default function FaviconConversion() {
             setState({ status: 'done', result, file })
             onConversionSuccess('image')
         } catch (e) {
+            refund()
             setState({ status: 'error', message: e instanceof Error ? e.message : 'Conversion failed' })
         }
     }
@@ -43,7 +61,7 @@ export default function FaviconConversion() {
             </div>
 
             {state.status === 'idle' && (
-                <FaviconDropzone onFile={handleFile} />
+                <FaviconDropzone onFile={handleFile} atLimit={atLimit} />
             )}
 
             {state.status === 'converting' && (

@@ -2,17 +2,21 @@ import { Import } from "lucide-react"
 import { Button } from "../ui/button"
 import { useRef } from "react"
 import { Badge } from "../ui/badge"
+import { cn } from "@/lib/utils"
+import { useNavigate } from "react-router-dom"
 
 const ACCEPTED = ['image/png', 'image/jpeg', 'image/webp', 'image/svg+xml', 'image/gif']
 const ACCEPTED_EXT = ['PNG', 'JPG', 'WEBP', 'SVG', 'GIF']
 
 interface Props {
     onFile: (file: File) => void
+    atLimit?: boolean
 }
 
-export default function FaviconDropzone({ onFile }: Props) {
+export default function FaviconDropzone({ onFile, atLimit = false }: Props) {
     const inputRef = useRef<HTMLInputElement>(null)
     const wrapperRef = useRef<HTMLDivElement>(null)
+    const navigate = useNavigate()
 
     const handleClickRedirection = () => inputRef.current?.click()
     const handleDragEnter = () => wrapperRef.current?.classList.add('dragenter')
@@ -47,29 +51,34 @@ export default function FaviconDropzone({ onFile }: Props) {
             />
             <div
                 ref={wrapperRef}
-                onDrop={handleDrop}
-                onDragOver={preventDragOver}
-                onDragEnter={handleDragEnter}
-                onDragEnd={handleDragEnd}
-                className="flex flex-col items-center justify-center py-10 w-full h-90 border border-border hover:border-primary rounded-3xl border-dashed transition-colors cursor-pointer gap-4 [&.dragenter]:bg-accent"
+                onDrop={atLimit ? undefined : handleDrop}
+                onDragOver={atLimit ? undefined : preventDragOver}
+                onDragEnter={atLimit ? undefined : handleDragEnter}
+                onDragEnd={atLimit ? undefined : handleDragEnd}
+                className={cn(
+                    "flex flex-col items-center justify-center py-10 w-full h-90 border rounded-3xl border-dashed transition-colors gap-4 [&.dragenter]:bg-accent",
+                    atLimit ? "border-border cursor-default" : "border-border hover:border-primary cursor-pointer"
+                )}
             >
-                <Button onClick={handleClickRedirection} variant="outline" className="w-20 h-20 border-border hover:border-primary transition-colors">
-                    <Import className="size-10 stroke-primary" />
-                </Button>
+                <div className={cn("flex flex-col items-center justify-center gap-4", atLimit && "opacity-60 pointer-events-none")}>
+                    <Button onClick={atLimit ? undefined : handleClickRedirection} variant="outline" className="w-20 h-20 border-border hover:border-primary transition-colors">
+                        <Import className="size-10 stroke-primary" />
+                    </Button>
 
-                <div className="text-center">
-                    <h2 className="text-2xl font-body font-semibold text-foreground">Drop an image here</h2>
-                    <p className="text-sm text-muted-foreground mt-1">You'll get .ico, every PNG size, and macOS .icns</p>
+                    <div className="text-center">
+                        <h2 className="text-2xl font-body font-semibold text-foreground">Drop an image here</h2>
+                        <p className="text-sm text-muted-foreground mt-1">{atLimit ? 'Out of tokens for today - they refresh in 24 hours' : "You'll get .ico, every PNG size, and macOS .icns"}</p>
+                    </div>
+
+                    <div className="flex items-center justify-center flex-wrap gap-2">
+                        {ACCEPTED_EXT.map((ext) => (
+                            <Badge variant="secondary" key={ext} className="rounded-sm p-3 text-sm font-light text-primary">{ext}</Badge>
+                        ))}
+                    </div>
                 </div>
 
-                <div className="flex items-center justify-center flex-wrap gap-2">
-                    {ACCEPTED_EXT.map((ext) => (
-                        <Badge variant="secondary" key={ext} className="rounded-sm p-3 text-sm font-light text-primary">{ext}</Badge>
-                    ))}
-                </div>
-
-                <Button onClick={handleClickRedirection} className="bg-primary h-12 w-60 text-lg" variant="default">
-                    Browse Image
+                <Button onClick={atLimit ? () => navigate('/pricing') : handleClickRedirection} className="bg-primary h-12 w-60 text-lg" variant="default">
+                    {atLimit ? 'Upgrade to Pro' : 'Browse Image'}
                 </Button>
             </div>
         </form>

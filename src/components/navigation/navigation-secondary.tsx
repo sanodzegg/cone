@@ -12,6 +12,7 @@ import {
 import { cn } from "@/lib/utils";
 import { Camera, ChevronRight, Crop, FileDown, FileEdit, FilePlus, FolderInput, FolderSync, Gauge, Globe, ImageIcon, LayoutGrid, Lock, PenLine, Pipette, Star, Tag, TextCursorInput, User, WifiOff, Zap } from "lucide-react";
 import { useAuth } from "@/lib/useAuth";
+import { isPaidPlan } from "@/store/useAuthStore";
 import { PRICING_DISMISSED_KEY } from "./navigation";
 
 const FAVORITES_KEY = 'conesoft_extension_favorites'
@@ -24,14 +25,22 @@ function saveFavorites(favs: string[]) {
     localStorage.setItem(FAVORITES_KEY, JSON.stringify(favs))
 }
 
+// A nav item is plan-locked when it's `proOnly` and the user is on the limited tier, OR when
+// it's `paidOnly` and the user isn't on a paid plan (paidOnly is stricter — it also locks
+// trial). Shared by the per-item render and the group-collapse logic so they stay in sync.
+function isChildLocked(child: GroupChild, isLimited: boolean, isPaid: boolean): boolean {
+    return (isLimited && !!child.proOnly) || (!isPaid && !!child.paidOnly)
+}
+
 function renderChild(
     child: GroupChild,
     isLimited: boolean,
+    isPaid: boolean,
     isOnline: boolean,
     favorites: string[],
     toggleFavorite: (href: string) => void,
 ) {
-    const childLocked = isLimited && !!child.proOnly
+    const childLocked = isChildLocked(child, isLimited, isPaid)
     const isDisabled = child.disabled || (!isOnline && child.requiresInternet) || childLocked
     const isFav = favorites.includes(child.href)
 
@@ -77,7 +86,7 @@ function renderChild(
     )
 }
 
-type GroupChild = { title: string; description: string; href: string; icon: React.ReactNode; disabled?: boolean; requiresInternet?: boolean; proOnly?: boolean }
+type GroupChild = { title: string; description: string; href: string; icon: React.ReactNode; disabled?: boolean; requiresInternet?: boolean; proOnly?: boolean; paidOnly?: boolean }
 type Extension = { kind: 'group'; title: string; icon: React.ReactNode; proOnly?: boolean; children: GroupChild[] }
 
 const extensions: Extension[] = [
@@ -131,7 +140,7 @@ const extensions: Extension[] = [
                 description: 'Convert every image in a folder, subfolders included',
                 href: '/extensions/bulk-converter',
                 icon: <FolderInput className="size-5" />,
-                proOnly: true,
+                paidOnly: true,
             },
             {
                 title: 'Batch Rename',
@@ -198,6 +207,7 @@ export function NavigationSecondary() {
     const isExtensionActive = pathname.startsWith('/extensions')
     const { user, plan } = useAuth()
     const isLimited = plan === 'limited'
+    const isPaid = isPaidPlan(plan)
     const [open, setOpen] = useState(false)
     const [favorites, setFavorites] = useState<string[]>(getFavorites)
     const [expandedGroups, setExpandedGroups] = useState<Set<string>>(() => {
@@ -286,7 +296,7 @@ export function NavigationSecondary() {
                                     </button>
                                     {isExpanded && (
                                         <div className="ml-4 mt-1 flex flex-col gap-1 border-l border-border pl-3">
-                                            {favChildren.map(child => renderChild(child, isLimited, isOnline, favorites, toggleFavorite))}
+                                            {favChildren.map(child => renderChild(child, isLimited, isPaid, isOnline, favorites, toggleFavorite))}
                                         </div>
                                     )}
                                 </div>
@@ -296,8 +306,7 @@ export function NavigationSecondary() {
                         {extensions.map((ext) => {
                             const visibleChildren = ext.children.filter(c => !favorites.includes(c.href))
                             if (visibleChildren.length === 0) return null
-                            const allChildrenLocked = isLimited && visibleChildren.every(c => !!c.proOnly)
-                            const groupLocked = allChildrenLocked
+                            const groupLocked = visibleChildren.every(c => isChildLocked(c, isLimited, isPaid))
                             const isExpanded = expandedGroups.has(ext.title) && !groupLocked
                             const isGroupActive = !groupLocked && visibleChildren.some(c => pathname === c.href)
 
@@ -322,7 +331,7 @@ export function NavigationSecondary() {
                                     </button>
                                     {isExpanded && (
                                         <div className="ml-4 mt-1 flex flex-col gap-1 border-l border-border pl-3">
-                                            {visibleChildren.map(child => renderChild(child, isLimited, isOnline, favorites, toggleFavorite))}
+                                            {visibleChildren.map(child => renderChild(child, isLimited, isPaid, isOnline, favorites, toggleFavorite))}
                                         </div>
                                     )}
                                 </div>
